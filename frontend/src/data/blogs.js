@@ -112,10 +112,9 @@ React forms a powerful foundation for building modern web applications. By follo
     tags: ["React", "TypeScript", "Web Development", "JavaScript", "Frontend"],
     category: "Tutorial",
     author: {
-      name: "John Doe",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      bio: "Full Stack Developer & Technical Writer",
+      name: "Moniruzzaman Mahdi",
+      avatar: "https://avatars.githubusercontent.com/u/159605851?v=4",
+      bio: "Full Stack MERN Developer & UI/UX Designer",
     },
   },
   {
@@ -170,10 +169,9 @@ React forms a powerful foundation for building modern web applications. By follo
     tags: ["CSS", "Layout", "Frontend"],
     category: "Tutorial",
     author: {
-      name: "John Doe",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      bio: "Full Stack Developer & Technical Writer",
+      name: "Moniruzzaman Mahdi",
+      avatar: "https://avatars.githubusercontent.com/u/159605851?v=4",
+      bio: "Full Stack MERN Developer & UI/UX Designer",
     },
   },
 ];
