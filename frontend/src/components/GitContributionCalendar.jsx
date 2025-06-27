@@ -138,6 +138,9 @@ const GitContributionCalendar = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* This is where the 'Contribution Activity' section was. It's now removed. */}
+
       </div>
     </section>
   );
