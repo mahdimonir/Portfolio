@@ -139,7 +139,7 @@ const GitContributionCalendar = () => {
           </div>
         </motion.div>
 
-        <motion.div
+        /* <motion.div
           className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 dark:border-gray-700/30 relative"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -254,7 +254,7 @@ const GitContributionCalendar = () => {
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
             </motion.div>
           )}
-        </motion.div>
+        </motion.div> */
       </div>
     </section>
   );
