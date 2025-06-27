@@ -138,12 +138,8 @@ const GitContributionCalendar = () => {
             </div>
           </div>
         </motion.div>
-<<<<<<< HEAD
-=======
 
         {/* This is where the 'Contribution Activity' section was. It's now removed. */}
-
->>>>>>> 0c500a963657ed274a3201004fe2d283ffadd696
       </div>
     </section>
   );
