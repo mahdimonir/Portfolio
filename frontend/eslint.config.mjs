@@ -1,14 +1,7 @@
-<<<<<<< HEAD
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-=======
-import react from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import jsxA11y from "eslint-plugin-jsx-a11y";
->>>>>>> 0c500a963657ed274a3201004fe2d283ffadd696
 import globals from "globals";
 
 export default [
@@ -54,8 +47,4 @@ export default [
       "jsx-a11y/anchor-is-valid": "off", // Allow custom anchor handling
     },
   },
-<<<<<<< HEAD
 ];
-=======
-];
->>>>>>> 0c500a963657ed274a3201004fe2d283ffadd696
