@@ -139,122 +139,125 @@ const GitContributionCalendar = () => {
           </div>
         </motion.div>
 
-        {/* <motion.div
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 dark:border-gray-700/30 relative"
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Contribution Activity
-            </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>Less</span>
-              {[0, 1, 2, 3, 4].map((level) => (
-                <div
-                  key={level}
-                  className={`w-3 h-3 rounded-sm ${getColorClass(level)}`}
+        {/*
+<motion.div
+  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-6 shadow-lg border border-white/20 dark:border-gray-700/30 relative"
+  initial={{ opacity: 0, scale: 0.95 }}
+  whileInView={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.6, delay: 0.2 }}
+  viewport={{ once: true }}
+>
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+      Contribution Activity
+    </h3>
+    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+      <span>Less</span>
+      {[0, 1, 2, 3, 4].map((level) => (
+        <div
+          key={level}
+          className={`w-3 h-3 rounded-sm ${getColorClass(level)}`}
+        />
+      ))}
+      <span>More</span>
+    </div>
+  </div>
+
+  <div className="overflow-x-auto">
+    <div className="w-[684px]">
+      {" "}
+      {/* 53 weeks * (10px cell + 2px gap) + 24px weekday labels */}
+      <div className="grid grid-cols-53 gap-[2px] mb-2 ml-6">
+        {Array.from({ length: 53 }, (_, weekIndex) => {
+          const weekDate = new Date(
+            contributionData[weekIndex * 7].date
+          );
+          const monthName = months[weekDate.getMonth()];
+          const isFirstWeekOfMonth =
+            weekIndex === 0 ||
+            (weekDate.getDate() <= 7 && weekDate.getDay() === 0);
+          return (
+            <div
+              key={weekIndex}
+              className="text-[10px] text-gray-500 dark:text-gray-400 text-center"
+            >
+              {isFirstWeekOfMonth ? monthName : ""}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-[2px]">
+        <div className="flex flex-col gap-[2px] w-6">
+          {weekdays.map((day, index) => (
+            <div key={index} className="h-[10px] flex items-center">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                {index % 2 === 1 ? day.slice(0, 3) : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-53 gap-[2px]">
+          {weeklyData.map((week, weekIndex) => (
+            <div key={weekIndex} className="flex flex-col gap-[2px]">
+              {week.map((day, dayIndex) => (
+                <motion.div
+                  key={`${weekIndex}-${dayIndex}`}
+                  className={`w-[10px] h-[10px] rounded-[2px] cursor-pointer transition-all duration-200 ${
+                    day ? getColorClass(day.level) : "bg-transparent"
+                  } hover:ring-1 hover:ring-blue-400 hover:scale-110`}
+                  onMouseEnter={() =>
+                    day &&
+                    setHoveredDay({ date: day.date, count: day.count })
+                  }
+                  onMouseLeave={() => setHoveredDay(null)}
+                  whileHover={{ scale: 1.2 }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{
+                    delay: (weekIndex * 7 + dayIndex) * 0.001,
+                    duration: 0.3,
+                  }}
                 />
               ))}
-              <span>More</span>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
 
-          <div className="overflow-x-auto">
-            <div className="w-[684px]">
-              {" "}
-              {/* 53 weeks * (10px cell + 2px gap) + 24px weekday labels */}
-              <div className="grid grid-cols-53 gap-[2px] mb-2 ml-6">
-                {Array.from({ length: 53 }, (_, weekIndex) => {
-                  const weekDate = new Date(
-                    contributionData[weekIndex * 7].date
-                  );
-                  const monthName = months[weekDate.getMonth()];
-                  const isFirstWeekOfMonth =
-                    weekIndex === 0 ||
-                    (weekDate.getDate() <= 7 && weekDate.getDay() === 0);
-                  return (
-                    <div
-                      key={weekIndex}
-                      className="text-[10px] text-gray-500 dark:text-gray-400 text-center"
-                    >
-                      {isFirstWeekOfMonth ? monthName : ""}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex gap-[2px]">
-                <div className="flex flex-col gap-[2px] w-6">
-                  {weekdays.map((day, index) => (
-                    <div key={index} className="h-[10px] flex items-center">
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                        {index % 2 === 1 ? day.slice(0, 3) : ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+  {hoveredDay && (
+    <motion.div
+      className="absolute bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm font-medium pointer-events-none z-10"
+      style={{
+        left: "50%",
+        top: "20%",
+        transform: "translate(-50%, -100%)",
+      }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+    >
+      <div className="text-center">
+        <div className="font-semibold">
+          {hoveredDay.count} contributions
+        </div>
+        <div className="text-xs opacity-75">
+          {hoveredDay.date.toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </div>
+      </div>
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
+    </motion.div>
+  )}
+</motion.div>
+*/}
 
-                <div className="grid grid-cols-53 gap-[2px]">
-                  {weeklyData.map((week, weekIndex) => (
-                    <div key={weekIndex} className="flex flex-col gap-[2px]">
-                      {week.map((day, dayIndex) => (
-                        <motion.div
-                          key={`${weekIndex}-${dayIndex}`}
-                          className={`w-[10px] h-[10px] rounded-[2px] cursor-pointer transition-all duration-200 ${
-                            day ? getColorClass(day.level) : "bg-transparent"
-                          } hover:ring-1 hover:ring-blue-400 hover:scale-110`}
-                          onMouseEnter={() =>
-                            day &&
-                            setHoveredDay({ date: day.date, count: day.count })
-                          }
-                          onMouseLeave={() => setHoveredDay(null)}
-                          whileHover={{ scale: 1.2 }}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{
-                            delay: (weekIndex * 7 + dayIndex) * 0.001,
-                            duration: 0.3,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {hoveredDay && (
-            <motion.div
-              className="absolute bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 px-3 py-2 rounded-lg text-sm font-medium pointer-events-none z-10"
-              style={{
-                left: "50%",
-                top: "20%",
-                transform: "translate(-50%, -100%)",
-              }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-            >
-              <div className="text-center">
-                <div className="font-semibold">
-                  {hoveredDay.count} contributions
-                </div>
-                <div className="text-xs opacity-75">
-                  {hoveredDay.date.toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </div>
-              </div>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
-            </motion.div>
-          )}
-        </motion.div> */}
       </div>
     </section>
   );
