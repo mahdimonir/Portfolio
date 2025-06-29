@@ -57,3 +57,4 @@ lib-cov
 
 # TypeScript
 *.tsbuildinfo
+frontend/package-lock.json
