@@ -1,7 +1,7 @@
-import { ClientWrapper } from "@/components/ClientWrapper";
+import { ClientWrapper } from "@/components/global/ClientWrapper";
 import "./globals.css";
 
-export default function RootLayout({ children }) {
+export default function Layout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
