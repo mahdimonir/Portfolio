@@ -2,6 +2,7 @@ import Experience from "@/components/homepage/Experience";
 import FeaturedProjects from "@/components/homepage/FeaturedProjects";
 import GitContribution from "@/components/homepage/GitContribution";
 import Hero from "@/components/homepage/Hero";
+import Services from "@/components/homepage/Services";
 import TechStack from "@/components/homepage/TechStack";
 import Testimonials from "@/components/homepage/Testimonials";
 
@@ -13,6 +14,7 @@ const Page = () => {
           <Hero />
           <TechStack />
           <FeaturedProjects />
+          <Services />
           <Experience />
           <Testimonials />
           <GitContribution />

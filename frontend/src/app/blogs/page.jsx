@@ -1,7 +1,7 @@
 "use client";
 
 import { blogs } from "@/data/blogs";
-import { motion } from "framer-motion"; // Explicitly import motion
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { FaArrowLeft, FaCalendarAlt, FaClock, FaTag } from "react-icons/fa";
 
