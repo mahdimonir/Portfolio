@@ -1,11 +1,42 @@
 "use client";
 
-import Contact from "@/components/Contact";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
+import { toast } from "sonner";
+import Contact from "./components/Contact";
 
 const Page = () => {
+  const [secretClicks, setSecretClicks] = useState(0);
+  const [showSecretAccess, setShowSecretAccess] = useState(false);
+
+  const handleSecretClick = () => {
+    setSecretClicks((prev) => {
+      const newCount = prev + 1;
+      if (newCount >= 7) {
+        setShowSecretAccess(true);
+        return 0;
+      }
+      return newCount;
+    });
+  };
+
+  useEffect(() => {
+    if (showSecretAccess) {
+      toast.info("Rate limit reached!", {
+        duration: 4000,
+        action: {
+          label: "→",
+          onClick: () => {
+            window.location.href = "/login";
+          },
+        },
+      });
+      setShowSecretAccess(false);
+    }
+  }, [showSecretAccess]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-500">
       <div className="relative">
@@ -25,7 +56,10 @@ const Page = () => {
                 Back to Home
               </Link>
             </motion.div>
-            <Contact />
+            <Contact
+              handleSecretClick={handleSecretClick}
+              showSecretAccess={showSecretAccess}
+            />
           </div>
         </main>
       </div>

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FaBlog,
   FaEnvelope,
@@ -13,11 +13,19 @@ import {
 } from "react-icons/fa";
 import { useTheme } from "../ThemeProvider";
 
-const NavItem = ({ icon: Icon, label, path, isActive, onClick }) => (
+const NavItem = ({
+  icon: Icon,
+  label,
+  path,
+  isActive,
+  onClick,
+  onDoubleClick,
+}) => (
   <motion.div className="relative">
     {path ? (
       <Link
         href={path}
+        onDoubleClick={onDoubleClick}
         className={`p-3 rounded-2xl transition-all duration-300 flex items-center justify-center ${
           isActive
             ? "text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg"
@@ -29,6 +37,7 @@ const NavItem = ({ icon: Icon, label, path, isActive, onClick }) => (
     ) : (
       <button
         onClick={onClick}
+        onDoubleClick={onDoubleClick}
         className="p-3 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 relative overflow-hidden"
       >
         <Icon size={20} />
@@ -118,7 +127,8 @@ const ThemeToggle = () => {
 };
 
 const Navbar = () => {
-  const pathname = usePathname(); // Replaced useLocation with usePathname
+  const pathname = usePathname();
+  const router = useRouter();
 
   const navItems = [
     { icon: FaHome, label: "Home", path: "/" },
@@ -130,6 +140,13 @@ const Navbar = () => {
   const isActive = (path) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
+  };
+
+  // Handler for double click on Contact
+  const handleContactDoubleClick = () => {
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      router.push("/dashboard");
+    }
   };
 
   return (
@@ -157,15 +174,29 @@ const Navbar = () => {
             <ThemeToggle />
 
             {/* Last two nav items */}
-            {navItems.slice(2).map(({ icon, label, path }) => (
-              <NavItem
-                key={label}
-                icon={icon}
-                label={label}
-                path={path}
-                isActive={isActive(path)}
-              />
-            ))}
+            {navItems.slice(2).map(({ icon, label, path }) => {
+              if (label === "Contact") {
+                return (
+                  <NavItem
+                    key={label}
+                    icon={icon}
+                    label={label}
+                    path={path}
+                    isActive={isActive(path)}
+                    onDoubleClick={handleContactDoubleClick}
+                  />
+                );
+              }
+              return (
+                <NavItem
+                  key={label}
+                  icon={icon}
+                  label={label}
+                  path={path}
+                  isActive={isActive(path)}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

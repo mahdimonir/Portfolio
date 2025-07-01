@@ -108,6 +108,10 @@
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
   }
 
+  .section-gradient-bg {
+    @apply bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-blue-900/10 dark:to-purple-900/10;
+  }
+
   .shadow-glow {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
   }

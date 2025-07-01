@@ -5,8 +5,6 @@ import ThemeProvider from "@/components/ThemeProvider";
 import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import DashboardBubble from "./DashboardBubble";
-import SecretLoginTrigger from "./SecretLoginTrigger";
 
 const queryClient = new QueryClient();
 
@@ -19,8 +17,6 @@ export function ClientWrapper({ children }) {
             {children}
             <Sonner />
             <Navbar />
-            <DashboardBubble />
-            <SecretLoginTrigger />
           </div>
         </ThemeProvider>
       </TooltipProvider>
