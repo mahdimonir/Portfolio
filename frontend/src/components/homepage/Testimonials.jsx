@@ -42,7 +42,7 @@ const Testimonials = () => {
   };
 
   return (
-    <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-blue-900/10 dark:to-purple-900/10">
+    <section className="py-12 md:py-20 px-4 section-gradient-bg">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="text-center mb-12"
