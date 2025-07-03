@@ -1,15 +1,16 @@
 "use client";
 
+import { triggerLoginStatusChange } from "@/components/global/Navbar";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   FaBlog,
+  FaCalendarAlt,
   FaChartBar,
   FaCog,
   FaEnvelope,
   FaFileAlt,
-  FaRocket,
   FaSignOutAlt,
   FaTasks,
   FaUser,
@@ -20,8 +21,8 @@ const menuItems = [
   { id: "overview", label: "Overview", icon: FaChartBar },
   { id: "analytics", label: "Analytics", icon: FaChartBar },
   { id: "works", label: "Works", icon: FaTasks },
-  { id: "requests", label: "Project Requests", icon: FaRocket },
   { id: "blogs", label: "Blogs", icon: FaBlog },
+  { id: "consultations", label: "Consultations", icon: FaCalendarAlt },
   { id: "messages", label: "Messages", icon: FaEnvelope },
   { id: "profile", label: "Profile", icon: FaUser },
   { id: "resume", label: "Resume Maker", icon: FaFileAlt },
@@ -29,7 +30,11 @@ const menuItems = [
   { id: "logout", label: "Logout", icon: FaSignOutAlt },
 ];
 
-export const DashboardSidebar = ({ activeTab, setActiveTab }) => {
+export const DashboardSidebar = ({
+  activeTab,
+  setActiveTab,
+  openConfirmDialog,
+}) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [hovered, setHovered] = useState(false); // Track if opened via hover
   const sidebarRef = useRef(null);
@@ -52,12 +57,21 @@ export const DashboardSidebar = ({ activeTab, setActiveTab }) => {
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userEmail");
+    triggerLoginStatusChange();
     router.push("/");
   };
 
   const handleItemClick = (id) => {
     if (id === "logout") {
-      handleLogout();
+      openConfirmDialog({
+        title: "Confirm Logout",
+        message:
+          "Are you sure you want to logout? You'll need to login again to access the dashboard.",
+        type: "warning",
+        confirmText: "Logout",
+        cancelText: "Stay",
+        onConfirm: handleLogout,
+      });
     } else {
       setActiveTab(id);
     }
