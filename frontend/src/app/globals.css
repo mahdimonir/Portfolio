@@ -41,12 +41,13 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans overflow-x-hidden;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
   }
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 }
 
