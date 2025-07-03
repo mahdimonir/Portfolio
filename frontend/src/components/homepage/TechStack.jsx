@@ -204,7 +204,7 @@ const TechStack = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 px-4 bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
+    <section className="py-16 md:py-20 px-4 section-gradient-bg">
       <div className="max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-16"
@@ -336,48 +336,6 @@ const TechStack = () => {
             );
           })}
         </div>
-
-        {/* Skills Progress */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="mt-16 bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-white/20 dark:border-gray-700/20"
-        >
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-            Proficiency Levels
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { skill: "Frontend Development", level: 95 },
-              { skill: "Backend Development", level: 90 },
-              { skill: "Database Design", level: 85 },
-              { skill: "DevOps & Deployment", level: 80 },
-            ].map((skill, index) => (
-              <div key={skill.skill} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {skill.skill}
-                  </span>
-                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                    {skill.level}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <motion.div
-                    className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.level}%` }}
-                    transition={{ duration: 1, delay: index * 0.2 }}
-                    viewport={{ once: true }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </section>
   );
