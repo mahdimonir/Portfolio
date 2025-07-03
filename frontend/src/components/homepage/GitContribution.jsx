@@ -192,7 +192,7 @@ const GitContribution = () => {
   }, [loading, contributions]);
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-green-50/30 to-blue-50/30 dark:from-green-900/10 dark:to-blue-900/10">
+    <section className="py-20 px-4 section-gradient-bg">
       <div className="max-w-5xl mx-auto">
         <motion.div
           className="text-center mb-12"
