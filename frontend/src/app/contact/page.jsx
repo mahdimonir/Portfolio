@@ -1,11 +1,11 @@
 "use client";
 
+import Contact from "@/components/contacts/Contact";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { toast } from "sonner";
-import Contact from "./components/Contact";
 
 const Page = () => {
   const [secretClicks, setSecretClicks] = useState(0);
