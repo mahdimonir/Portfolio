@@ -1,5 +1,6 @@
 "use client";
 
+import { triggerLoginStatusChange } from "@/components/global/Navbar";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -39,6 +40,7 @@ const Page = () => {
     // Set login status in localStorage
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("userEmail", formData.email);
+    triggerLoginStatusChange();
     // Redirect to root
     router.push("/");
   };
