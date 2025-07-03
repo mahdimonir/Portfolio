@@ -1,9 +1,11 @@
 "use client";
 
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Analytics from "./components/Analytics";
-import BlogForm from "./components/BlogForm";
+import BlogManager from "./components/BlogManager";
+import ConsultationScheduleManager from "./components/ConsultationScheduleManager";
 import { DashboardSidebar } from "./components/DashboardSidebar";
 import MessagesPanel from "./components/MessagesPanel";
 import Overview from "./components/Overview";
@@ -16,7 +18,19 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Sync with DashboardSidebar
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+
+  // ConfirmDialog state
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    title: "",
+    message: "",
+    type: "warning",
+    confirmText: "Confirm",
+    cancelText: "Cancel",
+    onConfirm: () => {},
+  });
+
   const router = useRouter();
 
   useEffect(() => {
@@ -34,6 +48,12 @@ const Page = () => {
 
     checkAuth();
   }, [router]);
+
+  // Function to open dialog from any child
+  const openConfirmDialog = (config) => {
+    setConfirmConfig({ ...confirmConfig, ...config });
+    setShowConfirm(true);
+  };
 
   if (isLoading) {
     return (
@@ -67,17 +87,21 @@ const Page = () => {
       case "analytics":
         return <Analytics />;
       case "works":
-        return <WorksManager />;
+        return <WorksManager openConfirmDialog={openConfirmDialog} />;
       case "blogs":
-        return <BlogForm />;
+        return <BlogManager openConfirmDialog={openConfirmDialog} />;
+      case "consultations":
+        return (
+          <ConsultationScheduleManager openConfirmDialog={openConfirmDialog} />
+        );
       case "messages":
-        return <MessagesPanel />;
+        return <MessagesPanel openConfirmDialog={openConfirmDialog} />;
       case "resume":
-        return <ResumeMaker />;
+        return <ResumeMaker openConfirmDialog={openConfirmDialog} />;
       case "profile":
-        return <UserProfileForm />;
+        return <UserProfileForm openConfirmDialog={openConfirmDialog} />;
       case "settings":
-        return <Settings />;
+        return <Settings openConfirmDialog={openConfirmDialog} />;
       default:
         return <Overview />;
     }
@@ -89,6 +113,7 @@ const Page = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onToggle={setSidebarCollapsed}
+        openConfirmDialog={openConfirmDialog}
       />
       <div
         className={`p-2 md:p-5 lg:p-8 transition-all duration-300 ${
@@ -97,6 +122,19 @@ const Page = () => {
       >
         {renderContent()}
       </div>
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          confirmConfig.onConfirm();
+          setShowConfirm(false);
+        }}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        type={confirmConfig.type}
+        confirmText={confirmConfig.confirmText}
+        cancelText={confirmConfig.cancelText}
+      />
     </div>
   );
 };
