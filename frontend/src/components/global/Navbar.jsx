@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   FaBlog,
   FaEnvelope,
   FaHome,
   FaMoon,
   FaProjectDiagram,
+  FaShieldAlt,
   FaSun,
 } from "react-icons/fa";
 import { useTheme } from "../ThemeProvider";
@@ -20,34 +22,78 @@ const NavItem = ({
   isActive,
   onClick,
   onDoubleClick,
+  isLoggedIn,
 }) => (
   <motion.div className="relative">
     {path ? (
       <Link
         href={path}
         onDoubleClick={onDoubleClick}
-        className={`p-3 rounded-2xl transition-all duration-300 flex items-center justify-center ${
+        className={`relative p-2 rounded-xl transition-all duration-300 flex items-center justify-center ${
           isActive
             ? "text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg"
             : "text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
         }`}
       >
-        <Icon size={20} />
+        <Icon size={18} />
+
+        {/* ✅ Login shield for Contact tab only */}
+        {label === "Contact" && isLoggedIn && (
+          <motion.div
+            className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 z-10"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 20,
+              delay: 0.1,
+            }}
+          >
+            <motion.div
+              className="relative"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <FaShieldAlt
+                size={12}
+                className="text-green-500 bg-white dark:bg-gray-900 rounded-full p-0.5 shadow-md border border-green-300 dark:border-green-700"
+              />
+              {/* Subtle pulsing effect */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-green-400"
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.3, 0, 0.3],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
       </Link>
     ) : (
       <button
         onClick={onClick}
         onDoubleClick={onDoubleClick}
-        className="p-3 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 relative overflow-hidden"
+        className="p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 relative overflow-hidden"
       >
-        <Icon size={20} />
+        <Icon size={18} />
       </button>
     )}
 
-    {/* Active indicator */}
+    {/* Active indicator dot */}
     {isActive && (
       <motion.div
-        className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"
+        className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"
         layoutId="activeIndicator"
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       />
@@ -61,24 +107,23 @@ const ThemeToggle = () => {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="relative p-3 rounded-2xl text-gray-600 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 overflow-hidden"
+      className="relative p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-300 overflow-hidden"
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.95 }}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      {/* Background gradient effect */}
+      {/* Background gradient */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl opacity-0"
+        className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl opacity-0"
         animate={{ opacity: theme === "dark" ? 0.2 : 0 }}
         transition={{ duration: 0.3 }}
       />
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl opacity-0"
+        className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-0"
         animate={{ opacity: theme === "light" ? 0.2 : 0 }}
         transition={{ duration: 0.3 }}
       />
 
-      {/* Icon container with flip animation */}
       <motion.div
         initial={false}
         animate={{
@@ -98,7 +143,7 @@ const ThemeToggle = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
-            <FaSun size={20} className="text-yellow-500" />
+            <FaSun size={18} className="text-yellow-500" />
           </motion.div>
         ) : (
           <motion.div
@@ -106,14 +151,14 @@ const ThemeToggle = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
           >
-            <FaMoon size={20} className="text-blue-600" />
+            <FaMoon size={18} className="text-blue-600" />
           </motion.div>
         )}
       </motion.div>
 
-      {/* Subtle glow effect */}
+      {/* Subtle glow */}
       <motion.div
-        className="absolute inset-0 rounded-2xl"
+        className="absolute inset-0 rounded-xl"
         animate={{
           boxShadow:
             theme === "dark"
@@ -129,6 +174,7 @@ const ThemeToggle = () => {
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const navItems = [
     { icon: FaHome, label: "Home", path: "/" },
@@ -137,66 +183,72 @@ const Navbar = () => {
     { icon: FaEnvelope, label: "Contact", path: "/contact" },
   ];
 
-  const isActive = (path) => {
-    if (path === "/") return pathname === "/";
-    return pathname.startsWith(path);
-  };
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const status = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(status);
+    };
 
-  // Handler for double click on Contact
+    checkLoginStatus();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "isLoggedIn") checkLoginStatus();
+    };
+
+    const handleLoginStatusChange = () => checkLoginStatus();
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("loginStatusChanged", handleLoginStatusChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("loginStatusChanged", handleLoginStatusChange);
+    };
+  }, []);
+
+  const isActive = (path) =>
+    path === "/" ? pathname === "/" : pathname.startsWith(path);
+
   const handleContactDoubleClick = () => {
-    if (localStorage.getItem("isLoggedIn") === "true") {
+    if (isLoggedIn) {
       router.push("/dashboard");
     }
   };
 
   return (
     <motion.nav
-      className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4"
+      className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-2 overflow-x-hidden"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ delay: 1, duration: 0.5 }}
     >
-      <div className="max-w-md mx-auto">
-        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* First two nav items */}
-            {navItems.slice(0, 2).map(({ icon, label, path }) => (
+      <div className="max-w-sm mx-auto">
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 px-4 py-3">
+          <div className="flex items-center justify-between space-x-2">
+            {navItems.slice(0, 2).map((item) => (
               <NavItem
-                key={label}
-                icon={icon}
-                label={label}
-                path={path}
-                isActive={isActive(path)}
+                key={item.label}
+                {...item}
+                isActive={isActive(item.path)}
+                isLoggedIn={isLoggedIn}
               />
             ))}
 
-            {/* Theme toggle in 3rd position */}
             <ThemeToggle />
 
-            {/* Last two nav items */}
-            {navItems.slice(2).map(({ icon, label, path }) => {
-              if (label === "Contact") {
-                return (
-                  <NavItem
-                    key={label}
-                    icon={icon}
-                    label={label}
-                    path={path}
-                    isActive={isActive(path)}
-                    onDoubleClick={handleContactDoubleClick}
-                  />
-                );
-              }
-              return (
-                <NavItem
-                  key={label}
-                  icon={icon}
-                  label={label}
-                  path={path}
-                  isActive={isActive(path)}
-                />
-              );
-            })}
+            {navItems.slice(2).map((item) => (
+              <NavItem
+                key={item.label}
+                {...item}
+                isActive={isActive(item.path)}
+                isLoggedIn={isLoggedIn}
+                onDoubleClick={
+                  item.label === "Contact"
+                    ? handleContactDoubleClick
+                    : undefined
+                }
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -205,3 +257,8 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+// Helper to trigger login updates across tabs/pages
+export const triggerLoginStatusChange = () => {
+  window.dispatchEvent(new CustomEvent("loginStatusChanged"));
+};
