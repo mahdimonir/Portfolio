@@ -16,6 +16,6 @@
     "moduleResolution": "node",
     "allowJs": true
   },
-  "include": ["src/**/*.{js,jsx,ts,tsx}"],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "build", ".next"]
 }

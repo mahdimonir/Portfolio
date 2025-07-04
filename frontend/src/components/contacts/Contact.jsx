@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "sonner";
 
-const Contact = () => {
+const Contact = ({ handleSecretClick }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -80,7 +80,10 @@ const Contact = () => {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl font-bold mb-8 text-gray-800 dark:text-white">
+            <h3
+              className="text-2xl font-bold mb-8 text-gray-800 dark:text-white"
+              onClick={handleSecretClick}
+            >
               Let's Talk
             </h3>
 

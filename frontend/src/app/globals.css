@@ -41,12 +41,13 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans overflow-x-hidden;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
   }
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 }
 
@@ -90,18 +91,26 @@
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    @apply bg-opacity-10 border-opacity-20;
   }
-
-  .glass-dark {
-    background: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .glass-fallback {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+  .custom-tooltip {
+    background: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 4px;
   }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  .section-gradient-bg {
+    @apply bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-blue-900/10 dark:to-purple-900/10;
   }
 
   .shadow-glow {

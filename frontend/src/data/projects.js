@@ -1,7 +1,9 @@
 import { FaNodeJs, FaReact } from "react-icons/fa";
 import {
+  SiAiohttp,
   SiMongodb,
   SiNextdotjs,
+  SiSocketdotio,
   SiTailwindcss,
   SiTypescript,
 } from "react-icons/si";
@@ -44,6 +46,7 @@ export const projects = [
     status: "Completed",
     duration: "3 months",
     role: "Full Stack Developer",
+    gradient: "from-cyan-400 via-blue-500 to-purple-600",
   },
   {
     id: 2,
@@ -80,6 +83,7 @@ export const projects = [
     status: "In Progress",
     duration: "2 months",
     role: "Frontend Developer",
+    gradient: "from-emerald-400 via-teal-500 to-cyan-600",
   },
   {
     id: 3,
@@ -114,9 +118,49 @@ export const projects = [
     status: "Completed",
     duration: "1.5 months",
     role: "Frontend Developer",
+    gradient: "from-orange-400 via-red-500 to-pink-600",
   },
   {
     id: 4,
+    name: "ai-chat-application",
+    title: "AI Chat Application",
+    description:
+      "Real-time chat application with AI integration, supporting multiple users and smart message suggestions.",
+    longDescription:
+      "A modern social media platform with real-time messaging, post sharing, and advanced user interaction features. Built with React, Node.js, and MongoDB, featuring a scalable backend and responsive frontend.",
+    image:
+      "https://images.unsplash.com/photo-1587560699334-cc4ff634909a?w=600&h=400&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1587560699334-cc4ff634909a?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1516321310762-4794370e6a66?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1542743-05336fcc7ad4?w=800&h=600&fit=crop",
+    ],
+    tech: [
+      { name: "React", icon: FaReact, color: "text-blue-500" },
+      { name: "Node.js", icon: FaNodeJs, color: "text-green-500" },
+      { name: "MongoDB", icon: SiMongodb, color: "text-green-600" },
+      { name: "Tailwind CSS", icon: SiTailwindcss, color: "text-cyan-500" },
+      { name: "Socket.io", icon: SiSocketdotio, color: "text-gray-700" },
+      { name: "AI/ML", icon: SiAiohttp, color: "text-purple-600" },
+    ],
+    features: [
+      "Real-time Messaging",
+      "Post Sharing and Interactions",
+      "User Profiles",
+      "Notifications",
+      "Responsive Design",
+      "Scalable Backend",
+    ],
+    github: "https://github.com/mahdimonir/social",
+    demo: "https://social-demo.vercel.app",
+    category: "Full Stack",
+    status: "In Progress",
+    duration: "4 months",
+    role: "Full Stack Developer",
+    gradient: "from-purple-400 via-pink-500 to-rose-600",
+  },
+  {
+    id: 5,
     name: "social-media-app",
     title: "Social Media Platform",
     description:
@@ -150,9 +194,18 @@ export const projects = [
     status: "In Progress",
     duration: "4 months",
     role: "Full Stack Developer",
+    gradient: "from-indigo-400 via-blue-500 to-teal-600",
   },
 ];
 
 export const getProjectByName = (name) => {
   return projects.find((project) => project.name === name) || null;
 };
+
+export const Gradient = [
+  "from-cyan-400 via-blue-500 to-purple-600",
+  "from-emerald-400 via-teal-500 to-cyan-600",
+  "from-orange-400 via-red-500 to-pink-600",
+  "from-purple-400 via-pink-500 to-rose-600",
+  "from-indigo-400 via-blue-500 to-teal-600",
+];

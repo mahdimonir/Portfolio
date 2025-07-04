@@ -21,13 +21,15 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password id required"],
       minlength: [8, "Password must be at least 8 characters long"],
     },
-    socialLinks: {
-      github: String,
-      linkedin: String,
-      twitter: String,
-      website: String,
-      discord: String,
-    },
+    socialLinks: [
+      {
+        github: String,
+        linkedin: String,
+        twitter: String,
+        website: String,
+        discord: String,
+      },
+    ],
     skills: [
       {
         name: String,
@@ -49,13 +51,12 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user"],
       default: "user",
     },
-    aboutMe: {
-      type: String,
-    },
+    about: String,
     avatar: {
       public_id: String,
       url: String,
     },
+    tagLine: String,
     resume: {
       public_id: String,
       url: String,

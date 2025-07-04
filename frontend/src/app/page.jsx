@@ -1,9 +1,10 @@
-import FeaturedProjects from "@/components/FeaturedProjects";
-import GitContributionCalendar from "@/components/GitContributionCalendar";
-import Hero from "@/components/Hero";
-import PopularBlogs from "@/components/PopularBlogs";
-import TechStack from "@/components/TechStack";
-import Testimonials from "@/components/Testimonials";
+import Experience from "@/components/homepage/Experience";
+import FeaturedProjects from "@/components/homepage/FeaturedProjects";
+import GitContribution from "@/components/homepage/GitContribution";
+import Hero from "@/components/homepage/Hero";
+import Services from "@/components/homepage/Services";
+import TechStack from "@/components/homepage/TechStack";
+import Testimonials from "@/components/homepage/Testimonials";
 
 const Page = () => {
   return (
@@ -13,9 +14,10 @@ const Page = () => {
           <Hero />
           <TechStack />
           <FeaturedProjects />
-          <PopularBlogs />
+          <Services />
+          <Experience />
           <Testimonials />
-          <GitContributionCalendar />
+          <GitContribution />
         </main>
       </div>
     </div>

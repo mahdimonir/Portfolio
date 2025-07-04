@@ -1,6 +1,6 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/global/Navbar";
 import ThemeProvider from "@/components/ThemeProvider";
 import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
