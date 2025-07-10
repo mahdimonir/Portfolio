@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "@/data/user";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
@@ -13,22 +13,72 @@ import {
 } from "react-icons/fa";
 
 const Hero = () => {
-  // Dynamic tagline words
-  const taglineWords = [
-    "Developer",
-    "Designer",
-    "Creator",
-    "Innovator",
-    "Problem Solver",
-  ];
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  // Dynamic tagline state
+  const [currentTaglineIndex, setCurrentTaglineIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % taglineWords.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    const currentTagline = User.tagLines[currentTaglineIndex];
+    const typingSpeed = 100; // Speed of typing
+    const deletingSpeed = 50; // Speed of deleting
+    const pauseBeforeDelete = 2000; // Pause before starting to delete
+    const pauseBeforeNext = 500; // Pause before typing next tagline
+
+    let timeout;
+
+    if (isTyping && !isDeleting) {
+      // Typing phase
+      if (displayedText.length < currentTagline.length) {
+        timeout = setTimeout(() => {
+          setDisplayedText(
+            currentTagline.substring(0, displayedText.length + 1)
+          );
+        }, typingSpeed);
+      } else {
+        // Finished typing, pause then start deleting
+        timeout = setTimeout(() => {
+          setIsDeleting(true);
+          setIsTyping(false);
+        }, pauseBeforeDelete);
+      }
+    } else if (isDeleting && !isTyping) {
+      // Deleting phase
+      if (displayedText.length > 0) {
+        timeout = setTimeout(() => {
+          setDisplayedText(
+            currentTagline.substring(0, displayedText.length - 1)
+          );
+        }, deletingSpeed);
+      } else {
+        // Finished deleting, move to next tagline
+        timeout = setTimeout(() => {
+          setCurrentTaglineIndex((prev) => (prev + 1) % User.tagLines.length);
+          setIsDeleting(false);
+          setIsTyping(true);
+        }, pauseBeforeNext);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, isTyping, isDeleting, currentTaglineIndex]);
+
+  const handleResumeClick = () => {
+    setResumeLoading(true);
+
+    // Track resume views (Google Analytics)
+    if (typeof gtag !== "undefined") {
+      gtag("event", "resume_view", {
+        event_category: "engagement",
+        event_label: "hero_section",
+      });
+    }
+
+    // Reset loading state after a short delay
+    setTimeout(() => setResumeLoading(false), 2000);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -104,41 +154,25 @@ const Hero = () => {
           {User.fullName}
         </motion.h1>
 
+        {/* Dynamic Tagline Section with Typewriter Effect */}
         <motion.div
           variants={itemVariants}
-          className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-6 font-medium"
+          className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-6 font-medium min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3.5rem] flex items-center justify-center"
         >
-          {/* Split tagline to make last word dynamic */}
-          {User.tagLine.includes(" ") ? (
-            <>
-              {User.tagLine.split(" ").slice(0, -1).join(" ")}{" "}
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={currentWordIndex}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -20, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold"
-                >
-                  {taglineWords[currentWordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </>
-          ) : (
-            <AnimatePresence mode="wait">
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold text-center relative">
+            <span className="inline-block">
+              {displayedText}
               <motion.span
-                key={currentWordIndex}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -20, opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold"
-              >
-                {taglineWords[currentWordIndex]}
-              </motion.span>
-            </AnimatePresence>
-          )}
+                animate={{ opacity: [1, 0] }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                }}
+                className="inline-block w-0.5 h-6 sm:h-7 md:h-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 ml-1 align-middle"
+              />
+            </span>
+          </div>
         </motion.div>
 
         <motion.p
@@ -174,7 +208,7 @@ const Hero = () => {
             },
             {
               icon: FaEnvelope,
-              href: `mailto:${User.socialLinks.email}`,
+              href: `mailto:${User.contact.email}`,
               label: "Email",
               color: "hover:text-red-500",
             },
@@ -213,12 +247,28 @@ const Hero = () => {
             href={User.resume}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-white rounded-2xl font-semibold border-2 border-blue-600/50 hover:bg-blue-50/90 dark:hover:bg-gray-700/90 transition-all duration-300 shadow-lg hover:shadow-2xl backdrop-blur-sm"
+            onClick={handleResumeClick}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-white rounded-2xl font-semibold border-2 border-blue-600/50 hover:bg-blue-50/90 dark:hover:bg-gray-700/90 transition-all duration-300 shadow-lg hover:shadow-2xl backdrop-blur-sm group"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            title="View & Download Resume (Opens in new tab)"
           >
-            <FaDownload size={16} />
-            <span>Download CV</span>
+            <motion.div
+              className="group-hover:rotate-12 transition-transform duration-300"
+              animate={resumeLoading ? { rotate: 360 } : {}}
+              transition={
+                resumeLoading
+                  ? { duration: 1, repeat: Infinity, ease: "linear" }
+                  : {}
+              }
+            >
+              {resumeLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FaDownload size={16} />
+              )}
+            </motion.div>
+            <span>{resumeLoading ? "Opening..." : "View Resume"}</span>
           </motion.a>
         </motion.div>
       </motion.div>

@@ -4,7 +4,17 @@ export const User = {
   password: "",
   fullName: "Moniruzzaman Mahdi",
   avatar: "https://avatars.githubusercontent.com/u/159605851?v=4",
-  tagLine: "Full Stack MERN Developer & UI/UX Designer",
+  tagLines: [
+    "MERN Stack Developer",
+    "Full Stack JavaScript Developer",
+    "React & Node.js Specialist",
+    "MongoDB & Express.js Expert",
+    "Building Scalable Web Applications",
+    "JavaScript Problem Solver",
+    "API Development Specialist",
+    "Database Design Expert",
+    "Modern Web Development Enthusiast",
+  ],
   about:
     "Passionate about creating beautiful, functional web applications using the MERN stack. I love turning complex problems into simple, elegant solutions.",
   contact: {
@@ -19,5 +29,5 @@ export const User = {
     email: "mahdimoniruzzaman@gmail.com",
   },
   resume:
-    "https://res.cloudinary.com/devmahdi/raw/upload/v1751858249/Portfolio/RESUMES/MoniruzzamanMahdi_Resume.pdf",
+    "https://res.cloudinary.com/devmahdi/raw/upload/v1751995157/Portfolio/RESUMES/MoniruzzamanMahdi_Resume_1.pdf",
 };
