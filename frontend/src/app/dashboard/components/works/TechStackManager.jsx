@@ -1,138 +1,136 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useState } from "react";
-import { FaChartBar, FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { getIconComponent } from "@/components/global/getIconComponent";
+import React from "react";
+import { FaChartBar, FaEdit, FaTrash } from "react-icons/fa";
 
-const TechStackManager = () => {
-  const [activeCategory, setActiveCategory] = useState("frontend");
+const TechStackManager = ({
+  techStacks,
+  onDelete,
+  onEdit,
+  itemsPerPage = 12,
+}) => {
+  // Flatten all technologies across categories
+  const flattenedTechnologies = React.useMemo(() => {
+    const items = [];
+    for (const stack of techStacks || []) {
+      for (const tech of stack.technologies || []) {
+        items.push({ ...tech, __category: stack.category });
+      }
+    }
+    return items;
+  }, [techStacks]);
 
-  const categories = [
-    { id: "frontend", label: "Frontend", color: "from-blue-500 to-cyan-500" },
-    { id: "backend", label: "Backend", color: "from-green-500 to-emerald-500" },
-    { id: "database", label: "Database", color: "from-purple-500 to-pink-500" },
-    {
-      id: "devops",
-      label: "DevOps & Tools",
-      color: "from-orange-500 to-red-500",
-    },
-  ];
-
-  const techStacks = {
-    frontend: [
-      { name: "React", progress: 95, tagline: "JavaScript Library" },
-      { name: "TypeScript", progress: 90, tagline: "Type-Safe JavaScript" },
-      { name: "Next.js", progress: 85, tagline: "React Framework" },
-      { name: "Tailwind CSS", progress: 92, tagline: "Utility-First CSS" },
-    ],
-    backend: [
-      { name: "Node.js", progress: 88, tagline: "JavaScript Runtime" },
-      { name: "Express.js", progress: 85, tagline: "Web Framework" },
-      { name: "Python", progress: 75, tagline: "Programming Language" },
-      { name: "GraphQL", progress: 70, tagline: "Query Language" },
-    ],
-    database: [
-      { name: "MongoDB", progress: 85, tagline: "NoSQL Database" },
-      { name: "PostgreSQL", progress: 80, tagline: "SQL Database" },
-      { name: "Redis", progress: 75, tagline: "In-Memory Store" },
-      { name: "Firebase", progress: 82, tagline: "Backend Platform" },
-    ],
-    devops: [
-      { name: "Docker", progress: 78, tagline: "Containerization" },
-      { name: "AWS", progress: 72, tagline: "Cloud Platform" },
-      { name: "Git", progress: 95, tagline: "Version Control" },
-      { name: "Vercel", progress: 88, tagline: "Deployment Platform" },
-    ],
-  };
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const totalPages = Math.max(
+    1,
+    Math.ceil((flattenedTechnologies.length || 0) / itemsPerPage)
+  );
+  const pageItems = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return flattenedTechnologies.slice(start, end);
+  }, [flattenedTechnologies, currentPage, itemsPerPage]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-          Tech Stack & Progress Management
-        </h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium shadow-lg"
+    <>
+      <div className="space-y-6">
+        {/* Tech Stack Items */}
+        <div
+          className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+          style={{ gridAutoRows: "1fr" }}
         >
-          <FaPlus size={16} />
-          Add Technology
-        </motion.button>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <motion.button
-            key={category.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveCategory(category.id)}
-            className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-              activeCategory === category.id
-                ? `bg-gradient-to-r ${category.color} text-white shadow-lg`
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {category.label}
-          </motion.button>
-        ))}
-      </div>
-
-      {/* Tech Stack Items */}
-      <div className="grid gap-4">
-        {techStacks[activeCategory]?.map((tech, index) => (
-          <motion.div
-            key={tech.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white/50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30"
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">
-                  {tech.name}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {tech.tagline}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {tech.progress}%
-                </span>
-                <div className="flex gap-1">
-                  <button className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg">
-                    <FaEdit size={14} />
-                  </button>
-                  <button className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg">
+          {pageItems.map((tech) => {
+            const IconComponent = getIconComponent(tech.icon);
+            return (
+              <div
+                key={tech.name}
+                className="bg-white dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 flex flex-col h-full"
+              >
+                {/* Main content (icon, name, tagline, etc.) */}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <IconComponent
+                      size={32}
+                      className={`${tech.color} mb-3 group-hover:scale-110 transition-transform duration-300`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 dark:text-white truncate">
+                      {tech.name}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {tech.tagline}
+                    </div>
+                  </div>
+                </div>
+                {/* Spacer to push footer down */}
+                <div className="flex-1" />
+                {/* Footer */}
+                <div className="flex items-center gap-2 mt-2 w-auto self-start">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <FaChartBar size={12} /> Uses: {tech.uses || 0}
+                  </div>
+                  <button
+                    onClick={() =>
+                      onDelete(tech.__category, "techstack", tech.name)
+                    }
+                    className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                  >
                     <FaTrash size={14} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      onEdit(
+                        { ...tech, category: tech.__category },
+                        "techstack"
+                      )
+                    }
+                    className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                  >
+                    <FaEdit size={14} />
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-              <motion.div
-                className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${tech.progress}%` }}
-                transition={{ duration: 1, delay: index * 0.2 }}
-              />
-            </div>
-
-            {/* Analytics */}
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <FaChartBar size={12} />
-              <span>Last updated: 2 days ago</span>
-            </div>
-          </motion.div>
-        ))}
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 ${
+                  currentPage === idx + 1
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : ""
+                }`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={currentPage >= totalPages}
+              className="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

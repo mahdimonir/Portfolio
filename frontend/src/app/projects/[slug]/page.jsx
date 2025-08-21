@@ -1,29 +1,100 @@
 "use client";
 
-import { getProjectByName } from "@/data/projects";
+import { getIconComponent } from "@/components/global/getIconComponent";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import axiosInstance from "@/lib/axios";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaArrowLeft, FaExternalLinkAlt, FaGithub } from "react-icons/fa";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import {
+  FaArrowLeft,
+  FaExternalLinkAlt,
+  FaGithub,
+  FaProjectDiagram,
+} from "react-icons/fa";
+import { toast } from "sonner";
 
 const Page = ({ params }) => {
-  const { name } = params;
-  const project = getProjectByName(name);
+  const { slug } = React.use(params);
+  const [project, setProject] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get(`/projects/${slug}`);
+        const projectData = response.data.data;
+        console.log("project data :", projectData);
+        if (!projectData) {
+          throw new Error("Project not found");
+        }
+
+        setProject({
+          ...projectData,
+          id: projectData._id,
+          tech: Array.isArray(projectData.tech)
+            ? projectData.tech.map((techItem) => ({
+                name: techItem.name || "Unknown",
+                icon: getIconComponent(techItem.icon || "FaQuestionCircle"),
+                color: techItem.color || "text-gray-500",
+              }))
+            : [],
+          category: projectData.category?.category || "Uncategorized",
+          image: projectData.image || "/fallback-image.png",
+          images: Array.isArray(projectData.images)
+            ? projectData.images.map((img) => img.url)
+            : [],
+        });
+      } catch (error) {
+        setError(error.response?.data?.message || "Failed to fetch project");
+        toast.error(error.response?.data?.message || "Failed to fetch project");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProject();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="py-20">
+        <LoadingState message="Loading Project..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-20">
+        <ErrorState
+          title="Failed to load Project"
+          description="There was a problem connecting to our servers. Please check your connection and try again."
+          onRetry={() => window.location.reload()}
+          error={error || "The project you're looking for doesn't exist."}
+        />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
-          Project Not Found
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          The project you're looking for doesn't exist.
-        </p>
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
-        >
-          Back to Projects
-        </Link>
+      <div className="py-20">
+        <EmptyState
+          icon={FaProjectDiagram}
+          title="Project not found"
+          description="Looks like this project is not available at the moment. Check back later!"
+          action={
+            <Link
+              href="/projects"
+              className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
+            >
+              Back to Projects
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -123,17 +194,23 @@ const Page = ({ params }) => {
                   Technologies Used
                 </h3>
                 <div className="space-y-3">
-                  {Array.isArray(project.tech) ? (
+                  {Array.isArray(project.tech) && project.tech.length > 0 ? (
                     project.tech.map((tech, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <tech.icon className={`${tech.color} text-xl`} />
+                        {tech.icon ? (
+                          <tech.icon className={`${tech.color} text-xl`} />
+                        ) : (
+                          <FaGithub className="text-gray-500 text-xl" />
+                        )}
                         <span className="text-gray-700 dark:text-gray-300">
                           {tech.name}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-red-500 text-sm">Invalid tech data</p>
+                    <p className="text-red-500 text-sm">
+                      No technologies listed
+                    </p>
                   )}
                 </div>
               </motion.div>

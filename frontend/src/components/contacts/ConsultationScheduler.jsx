@@ -19,8 +19,10 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    loadAvailableTimes();
-  }, []);
+    if (isOpen) {
+      loadAvailableTimes();
+    }
+  }, [isOpen]);
 
   const loadAvailableTimes = () => {
     const savedTimes = JSON.parse(
@@ -58,6 +60,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+    loadAvailableTimes();
     setStep(2);
   };
 
@@ -145,7 +148,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
             aria-label="Close"
           >
             <FaTimes />
@@ -202,7 +205,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                 <motion.button
                   key={date}
                   onClick={() => handleDateSelect(date)}
-                  className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 transition-all duration-200 text-left"
+                  className="p-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 transition-all duration-200 text-left"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="button"
@@ -239,7 +242,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                   <motion.button
                     key={slot.id}
                     onClick={() => handleTimeSelect(slot.time)}
-                    className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 transition-all duration-200 text-center font-medium text-gray-900 dark:text-white"
+                    className="p-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-500 transition-all duration-200 text-center font-medium text-gray-900 dark:text-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="button"
@@ -269,7 +272,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
             <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
               Your Details
             </h3>
-            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
               <div className="text-sm text-blue-800 dark:text-blue-300">
                 <div className="font-medium">{formatDate(selectedDate)}</div>
                 <div>{selectedTime}</div>
@@ -291,7 +294,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                   type="text"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full rounded-md border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full rounded-xl border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.name ? "border-red-500" : ""
                   }`}
                   placeholder="Your full name"
@@ -316,7 +319,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full rounded-md border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full rounded-xl border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.email ? "border-red-500" : ""
                   }`}
                   placeholder="your.email@example.com"
@@ -341,7 +344,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                   type="tel"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full rounded-md border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-xl border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="+1234567890"
                   autoComplete="tel"
                 />
@@ -361,7 +364,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                   rows="3"
                   value={formData.message}
                   onChange={handleInputChange}
-                  className="w-full rounded-md border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full rounded-xl border px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   placeholder="Additional information (optional)"
                 />
               </div>
@@ -369,7 +372,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
               {/* Submit */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Schedule Consultation
               </button>

@@ -1,12 +1,10 @@
 "use client";
 
-import { triggerLoginStatusChange } from "@/components/global/Navbar";
+import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  FaBlog,
-  FaCalendarAlt,
   FaChartBar,
   FaCog,
   FaEnvelope,
@@ -21,8 +19,6 @@ const menuItems = [
   { id: "overview", label: "Overview", icon: FaChartBar },
   { id: "analytics", label: "Analytics", icon: FaChartBar },
   { id: "works", label: "Works", icon: FaTasks },
-  { id: "blogs", label: "Blogs", icon: FaBlog },
-  { id: "consultations", label: "Consultations", icon: FaCalendarAlt },
   { id: "messages", label: "Messages", icon: FaEnvelope },
   { id: "profile", label: "Profile", icon: FaUser },
   { id: "resume", label: "Resume Maker", icon: FaFileAlt },
@@ -39,6 +35,7 @@ export const DashboardSidebar = ({
   const [hovered, setHovered] = useState(false); // Track if opened via hover
   const sidebarRef = useRef(null);
   const router = useRouter();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const savedCollapsed = localStorage.getItem("sidebarCollapsed");
@@ -54,11 +51,8 @@ export const DashboardSidebar = ({
     localStorage.setItem("sidebarCollapsed", JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userEmail");
-    triggerLoginStatusChange();
-    router.push("/");
+  const handleLogout = async () => {
+    await logout();
   };
 
   const handleItemClick = (id) => {

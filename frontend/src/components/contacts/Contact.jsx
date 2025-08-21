@@ -1,5 +1,6 @@
 "use client";
 
+import axiosInstance from "@/lib/axios";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,14 +23,28 @@ const Contact = ({ handleSecretClick }) => {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      console.log("Form submitted:", data);
+    try {
+      const payload = {
+        senderEmail: data.email,
+        senderName: data.name,
+        subject: data.subject,
+        message: data.message,
+      };
+
+      const response = await axiosInstance.post("/messages/send", payload);
+
       toast.success("Message sent successfully!", {
         description: "I'll get back to you soon.",
       });
       reset();
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        "Failed to send message. Please try again.";
+      toast.error(message);
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const contactInfo = [

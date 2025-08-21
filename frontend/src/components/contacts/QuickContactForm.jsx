@@ -1,51 +1,51 @@
 "use client";
 
+import axiosInstance from "@/lib/axios";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { FaPaperPlane, FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
 const QuickContactForm = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setIsSubmitting(true);
-
     try {
-      // Save contact form data to localStorage for dashboard
-      const contactMessages = JSON.parse(
-        localStorage.getItem("contactMessages") || "[]"
-      );
-      const newMessage = {
-        id: Date.now(),
-        ...formData,
-        timestamp: new Date().toISOString(),
-        status: "unread",
-        type: "quick_contact",
+      const payload = {
+        senderName: data.name,
+        senderEmail: data.email,
+        subject: data.subject,
+        message: data.message,
       };
-      contactMessages.push(newMessage);
-      localStorage.setItem("contactMessages", JSON.stringify(contactMessages));
 
-      toast.success("Message sent successfully! We'll get back to you soon.");
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      const response = await axiosInstance.post("/messages/send", payload);
+
+      toast.success("Message sent successfully!", {
+        description: "I'll get back to you soon.",
+      });
+
+      reset();
       onClose();
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      const message =
+        error.response?.data?.message ||
+        "Failed to send message. Please try again.";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -59,7 +59,7 @@ const QuickContactForm = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mb-20"
+        className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mt-[-15px] mb-5"
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -73,20 +73,22 @@ const QuickContactForm = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Name *
               </label>
               <input
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
+                {...register("name", { required: "Name is required" })}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                 placeholder="Your name"
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -95,41 +97,38 @@ const QuickContactForm = ({ isOpen, onClose }) => {
               </label>
               <input
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                pattern="^\S+@\S+\.\S+$"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Invalid email address",
+                  },
+                })}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                 placeholder="your@email.com"
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Subject *
             </label>
             <input
-              name="subject"
-              value={formData.subject}
-              onChange={handleInputChange}
-              required
+              {...register("subject", { required: "Subject is required" })}
               className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
               placeholder="Project discussion"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone
-            </label>
-            <input
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-              placeholder="Your phone (optional)"
-            />
+            {errors.subject && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.subject.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -137,14 +136,16 @@ const QuickContactForm = ({ isOpen, onClose }) => {
               Message *
             </label>
             <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleInputChange}
-              required
+              {...register("message", { required: "Message is required" })}
               rows={5}
               className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none"
               placeholder="Tell me about your project..."
             />
+            {errors.message && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.message.message}
+              </p>
+            )}
           </div>
 
           <button
@@ -153,7 +154,10 @@ const QuickContactForm = ({ isOpen, onClose }) => {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-60"
           >
             {isSubmitting ? (
-              "Sending..."
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Sending...
+              </>
             ) : (
               <>
                 <FaPaperPlane size={16} />

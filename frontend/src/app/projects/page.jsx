@@ -1,11 +1,59 @@
 "use client";
 
-import { projects } from "@/data/projects";
+import { getIconComponent } from "@/components/global/getIconComponent";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import axiosInstance from "@/lib/axios";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaArrowLeft, FaExternalLinkAlt, FaGithub } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import {
+  FaArrowLeft,
+  FaExternalLinkAlt,
+  FaGithub,
+  FaProjectDiagram,
+} from "react-icons/fa";
+import { toast } from "sonner";
 
 const Page = () => {
+  const [projects, setProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch projects from /projects on mount
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get("/projects");
+        const apiProjects = response.data.data.map((project) => ({
+          ...project,
+          id: project._id,
+          tech: Array.isArray(project.tech)
+            ? project.tech.map((techItem) => ({
+                name: techItem.name || "Unknown",
+                icon: getIconComponent(techItem.icon || "FaQuestionCircle"),
+                color: techItem.color || "text-gray-500",
+              }))
+            : [],
+          category: project.category?.category || "Uncategorized",
+          image: project.image || "/fallback-image.png",
+          images: Array.isArray(project.images)
+            ? project.images.map((img) => img.url)
+            : [],
+        }));
+        setProjects(apiProjects);
+      } catch (error) {
+        setError(error.response?.data?.message || "Failed to fetch projects");
+        toast.error(
+          error.response?.data?.message || "Failed to fetch projects"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -26,6 +74,47 @@ const Page = () => {
       },
     },
   };
+
+  if (isLoading) {
+    return (
+      <div className="py-20">
+        <LoadingState message="Loading Projects..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-20">
+        <ErrorState
+          title="Failed to load Projects"
+          description="There was a problem connecting to our servers. Please check your connection and try again."
+          onRetry={() => window.location.reload()}
+          error={error}
+        />
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div className="py-20">
+        <EmptyState
+          icon={FaProjectDiagram}
+          title="No projects found"
+          description="Looks like there are no projects available at the moment. Check back later!"
+          action={
+            <Link
+              href="/"
+              className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
+            >
+              Go back home
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-500">
@@ -117,24 +206,29 @@ const Page = () => {
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {Array.isArray(project.tech) ? (
+                        {Array.isArray(project.tech) &&
+                        project.tech.length > 0 ? (
                           project.tech.map((tech, index) => (
                             <div
                               key={index}
                               className="p-2 bg-gray-100/80 dark:bg-gray-700/50 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                             >
-                              <tech.icon size={16} />
+                              {tech.icon ? (
+                                <tech.icon size={16} className={tech.color} />
+                              ) : (
+                                <FaGithub size={16} className="text-gray-500" />
+                              )}
                             </div>
                           ))
                         ) : (
                           <p className="text-red-500 text-sm">
-                            Invalid tech data
+                            No technologies listed
                           </p>
                         )}
                       </div>
 
                       <Link
-                        href={`/projects/${project.name}`}
+                        href={`/projects/${project.slug}`}
                         className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
                       >
                         View Details

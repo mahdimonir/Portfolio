@@ -1,9 +1,9 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   FaBlog,
   FaEnvelope,
@@ -174,7 +174,7 @@ const ThemeToggle = () => {
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
 
   const navItems = [
     { icon: FaHome, label: "Home", path: "/" },
@@ -183,36 +183,17 @@ const Navbar = () => {
     { icon: FaEnvelope, label: "Contact", path: "/contact" },
   ];
 
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const status = localStorage.getItem("isLoggedIn") === "true";
-      setIsLoggedIn(status);
-    };
-
-    checkLoginStatus();
-
-    const handleStorageChange = (e) => {
-      if (e.key === "isLoggedIn") checkLoginStatus();
-    };
-
-    const handleLoginStatusChange = () => checkLoginStatus();
-
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("loginStatusChanged", handleLoginStatusChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("loginStatusChanged", handleLoginStatusChange);
-    };
-  }, []);
-
   const isActive = (path) =>
     path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   const handleContactDoubleClick = () => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       router.push("/dashboard");
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -230,7 +211,7 @@ const Navbar = () => {
                 key={item.label}
                 {...item}
                 isActive={isActive(item.path)}
-                isLoggedIn={isLoggedIn}
+                isLoggedIn={isAuthenticated}
               />
             ))}
 
@@ -241,7 +222,7 @@ const Navbar = () => {
                 key={item.label}
                 {...item}
                 isActive={isActive(item.path)}
-                isLoggedIn={isLoggedIn}
+                isLoggedIn={isAuthenticated}
                 onDoubleClick={
                   item.label === "Contact"
                     ? handleContactDoubleClick

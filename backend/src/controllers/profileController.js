@@ -1,122 +1,219 @@
-import Profile from '../models/Profile.js';
-import { APIError } from '../middleware/error.js';
-import { uploadImage, deleteImage } from '../utils/cloudinary.js';
+import bcrypt from "bcrypt";
+import User from "../models/User.js";
+import { NotFoundError, ValidationError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { deleteImage, uploadImage, uploadResume } from "../utils/cloudinary.js";
+import { throwIf } from "../utils/throwIf.js";
 
-/**
- * Get profile information
- */
-export const getProfile = async (req, res) => {
-  const profile = await Profile.findOne();
-  if (!profile) {
-    throw new APIError('Profile not found', 404);
-  }
-  res.json(profile);
-};
+export const getProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password");
+  throwIf(!user, new NotFoundError("User not found"));
+  res.json(new ApiResponse(200, user));
+});
 
-/**
- * Create or update profile
- */
-export const updateProfile = async (req, res) => {
-  const { name, tagline, about, socialLinks, contact, skills } = req.body;
-  let avatarUrl;
+export const getPublicProfile = asyncHandler(async (req, res) => {
+  const userId = process.env.USER_ID;
 
-  // Handle avatar upload if provided
-  if (req.body.avatar && req.body.avatar.startsWith('data:image')) {
-    const uploadResult = await uploadImage(req.body.avatar, 'portfolio/avatar');
-    avatarUrl = uploadResult.url;
-  }
+  throwIf(!userId, new NotFoundError("User ID not configured in env"));
 
-  // Find existing profile or create new one
-  let profile = await Profile.findOne();
+  const user = await User.findById(userId)
+    .select(
+      "-password -email -otp -passwordResetToken -passwordResetExpires -role"
+    )
+    .lean();
 
-  if (profile) {
-    // Update existing profile
-    profile.name = name || profile.name;
-    profile.tagline = tagline || profile.tagline;
-    profile.about = about || profile.about;
-    if (avatarUrl) profile.avatar = avatarUrl;
-    if (socialLinks) profile.socialLinks = { ...profile.socialLinks, ...socialLinks };
-    if (contact) profile.contact = { ...profile.contact, ...contact };
-    if (skills) profile.skills = skills;
-  } else {
-    // Create new profile
-    profile = new Profile({
-      name,
-      tagline,
-      about,
-      avatar: avatarUrl,
-      socialLinks,
-      contact,
-      skills
-    });
-  }
+  throwIf(!user, new NotFoundError("User not found"));
 
-  await profile.save();
-  res.json(profile);
-};
+  // Manually shape public response
+  const publicProfile = {
+    fullName: user.fullName,
+    tagLines: user.tagLines,
+    about: user.about,
+    avatar: user.avatar?.url ?? null,
+    resume: user.resume?.url ?? null,
+    socialLinks: user.socialLinks,
+    contact: user.contact,
+  };
 
-/**
- * Update resume
- */
-export const updateResume = async (req, res) => {
-  const profile = await Profile.findOne();
-  if (!profile) {
-    throw new APIError('Profile not found', 404);
+  res.json(
+    new ApiResponse(200, publicProfile, "Public profile fetched successfully")
+  );
+});
+
+export const updateProfileDetails = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  throwIf(!user, new NotFoundError("User not found"));
+
+  let { fullName, socialLinks, contact, about, tagLines } = req.body;
+
+  try {
+    if (typeof socialLinks === "string") socialLinks = JSON.parse(socialLinks);
+    if (typeof contact === "string") contact = JSON.parse(contact);
+  } catch (err) {
+    throw new ValidationError("Invalid JSON format in socialLinks or contact");
   }
 
-  if (!req.body.resume) {
-    throw new APIError('Resume file is required', 400);
+  if (fullName) user.fullName = fullName;
+  if (socialLinks) user.socialLinks = socialLinks;
+  if (contact) user.contact = contact;
+  if (about) user.about = about;
+  if (tagLines) user.tagLines = tagLines;
+
+  await user.save();
+
+  res.json(new ApiResponse(200, user, "Profile details updated"));
+});
+
+export const updateAvatar = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  throwIf(!user, new NotFoundError("User not found"));
+
+  if (!req.files?.avatar) throw new ValidationError("No avatar file uploaded");
+
+  // Delete old avatar from Cloudinary if exists
+  if (user.avatar?.public_id) {
+    await deleteImage(user.avatar.public_id);
   }
 
-  // Upload resume to Cloudinary
-  const uploadResult = await uploadImage(req.body.resume, 'portfolio/resume');
-  profile.resume = uploadResult.url;
+  // Upload new avatar
+  const uploaded = await uploadImage(
+    req.files.avatar.tempFilePath,
+    "portfolio/avatars",
+    "image",
+    {
+      transformation: [
+        { width: 200, height: 200, crop: "fill", gravity: "face" },
+        { quality: "auto:best" },
+        { fetch_format: "auto" },
+      ],
+    }
+  );
 
-  await profile.save();
-  res.json({
-    message: 'Resume updated successfully',
-    resumeUrl: profile.resume
-  });
-};
+  user.avatar = {
+    public_id: uploaded.publicId,
+    url: uploaded.url,
+  };
 
-/**
- * Update skills
- */
-export const updateSkills = async (req, res) => {
-  const profile = await Profile.findOne();
-  if (!profile) {
-    throw new APIError('Profile not found', 404);
+  await user.save();
+
+  res.json(new ApiResponse(200, user.avatar, "Avatar updated"));
+});
+
+export const updateResume = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  throwIf(!user, new NotFoundError("User not found"));
+
+  if (!req.files?.resume) throw new ValidationError("No resume file uploaded");
+
+  // Delete old resume from Cloudinary if exists
+  if (user.resume?.public_id) {
+    await deleteImage(user.resume.public_id, "raw");
   }
 
-  const { skills } = req.body;
-  if (!Array.isArray(skills)) {
-    throw new APIError('Skills must be an array', 400);
+  // Upload new resume
+  const uploaded = await uploadResume(req.files.resume.tempFilePath);
+
+  user.resume = {
+    public_id: uploaded.publicId,
+    url: uploaded.url,
+  };
+
+  await user.save();
+
+  res.json(new ApiResponse(200, user.resume, "Resume updated"));
+});
+
+export const updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  throwIf(!user, new NotFoundError("User not found"));
+
+  let { fullName, socialLinks, contact, about, tagLines, avatar, resume } =
+    req.body;
+
+  // Parse JSON strings if needed (for form-data cases)
+  try {
+    if (typeof socialLinks === "string") {
+      socialLinks = JSON.parse(socialLinks);
+    }
+
+    if (typeof contact === "string") {
+      contact = JSON.parse(contact);
+    }
+  } catch (err) {
+    throw new ValidationError("Invalid JSON format in socialLinks or contact");
   }
 
-  profile.skills = skills;
-  await profile.save();
+  if (fullName) user.fullName = fullName;
+  if (socialLinks) user.socialLinks = socialLinks;
+  if (contact) user.contact = contact;
+  if (about) user.about = about;
+  if (tagLines) user.tagLines = tagLines;
 
-  res.json({
-    message: 'Skills updated successfully',
-    skills: profile.skills
-  });
-};
+  // Handle avatar upload
+  if (req.files && req.files.avatar) {
+    // Delete old avatar from Cloudinary if exists
+    if (user.avatar?.public_id) {
+      await deleteImage(user.avatar.public_id);
+    }
 
-/**
- * Update social links
- */
-export const updateSocialLinks = async (req, res) => {
-  const profile = await Profile.findOne();
-  if (!profile) {
-    throw new APIError('Profile not found', 404);
+    // Upload new avatar
+    const uploaded = await uploadImage(
+      req.files.avatar.tempFilePath,
+      "portfolio/avatars",
+      "image",
+      {
+        transformation: [
+          { width: 200, height: 200, crop: "fill", gravity: "face" },
+          { quality: "auto:best" },
+          { fetch_format: "auto" },
+        ],
+      }
+    );
+
+    user.avatar = {
+      public_id: uploaded.publicId,
+      url: uploaded.url,
+    };
   }
 
-  const { socialLinks } = req.body;
-  profile.socialLinks = { ...profile.socialLinks, ...socialLinks };
+  // Handle resume upload
+  if (req.files && req.files.resume) {
+    // Delete old resume from Cloudinary if exists
+    if (user.resume?.public_id) {
+      await deleteImage(user.resume.public_id, "raw");
+    }
 
-  await profile.save();
-  res.json({
-    message: 'Social links updated successfully',
-    socialLinks: profile.socialLinks
-  });
-};
+    // Upload new resume
+    const uploaded = await uploadResume(req.files.resume.tempFilePath);
+
+    user.resume = {
+      public_id: uploaded.publicId,
+      url: uploaded.url,
+    };
+  }
+
+  await user.save();
+
+  res.json(new ApiResponse(200, user, "Profile updated successfully"));
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user._id);
+  throwIf(!user, new NotFoundError("User not found"));
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  throwIf(
+    !isPasswordValid,
+    new ValidationError("Current password is incorrect")
+  );
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  user.password = hashedPassword;
+
+  await user.save();
+
+  res.json(new ApiResponse(200, null, "Password changed successfully"));
+});

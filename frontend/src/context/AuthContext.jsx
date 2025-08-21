@@ -40,14 +40,14 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
         } else {
           // Token is invalid, clear everything
-          clearAuth();
+          // clearAuth();
         }
       } else {
-        clearAuth();
+        // clearAuth();
       }
     } catch (error) {
       console.error("Auth check failed:", error);
-      clearAuth();
+      // clearAuth();
     } finally {
       setLoading(false);
     }
