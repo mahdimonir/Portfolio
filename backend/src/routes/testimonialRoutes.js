@@ -1,22 +1,22 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-  getTestimonials,
   createTestimonial,
-  updateTestimonial,
   deleteTestimonial,
-  updateOrder
-} from '../controllers/testimonialController.js';
-import { authenticate } from '../middleware/auth.js';
+  getAllTestimonials,
+  getTestimonials,
+  updateTestimonial,
+} from "../controllers/testimonialController.js";
+import { authorized } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 // Public routes
-router.get('/', getTestimonials);
+router.get("/", getTestimonials);
 
 // Protected routes
-router.post('/', authenticate, createTestimonial);
-router.put('/:id', authenticate, updateTestimonial);
-router.delete('/:id', authenticate, deleteTestimonial);
-router.put('/order/bulk', authenticate, updateOrder);
+router.get("/all", authorized("admin"), getAllTestimonials);
+router.post("/", authorized("admin"), createTestimonial);
+router.put("/:id", authorized("admin"), updateTestimonial);
+router.delete("/:id", authorized("admin"), deleteTestimonial);
 
 export default router;

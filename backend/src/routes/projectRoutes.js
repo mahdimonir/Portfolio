@@ -1,24 +1,28 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-  getProjects,
-  getProjectBySlug,
   createProject,
-  updateProject,
   deleteProject,
-  updateProjectStatus
-} from '../controllers/projectController.js';
-import { authenticate } from '../middleware/auth.js';
+  getAllProjects,
+  getProjectBySlug,
+  getProjects,
+  updateProject,
+} from "../controllers/projectController.js";
+import { authorized } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 // Public routes
-router.get('/', getProjects);
-router.get('/:slug', getProjectBySlug);
+router.get("/", getProjects); // Active projects & "?featured" projects
+
+// Admin routes (must come before dynamic routes)
+router.get("/all", authorized("admin"), getAllProjects);
+
+// Dynamic routes (must come after specific routes)
+router.get("/:slug", getProjectBySlug);
 
 // Protected routes
-router.post('/', authenticate, createProject);
-router.put('/:id', authenticate, updateProject);
-router.delete('/:id', authenticate, deleteProject);
-router.patch('/:id/status', authenticate, updateProjectStatus);
+router.post("/", authorized("admin"), createProject);
+router.put("/:id", authorized("admin"), updateProject);
+router.delete("/:id", authorized("admin"), deleteProject);
 
 export default router;

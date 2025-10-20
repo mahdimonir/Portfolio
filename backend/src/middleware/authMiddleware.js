@@ -1,64 +1,93 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { AuthError, ForbiddenError, NotFoundError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { msConverter } from "../utils/MSconverter.js";
 import { throwIf } from "../utils/throwIf.js";
 
-// Generate Token
-export const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET_KEY, {
-    expiresIn: msConverter(process.env.JWT_EXPIRES),
+// Utility to decode token and fetch user
+const decodeTokenAndGetUser = async (req) => {
+  // Extract token from cookies or Authorization header
+  const token =
+    req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
+
+  throwIf(!token, new AuthError("Unauthorized request: No token provided"));
+
+  try {
+    // Verify and decode token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+    // Fetch user from database, excluding password
+    const user = await User.findById(decoded.userId).select("-password");
+
+    return { token, decoded, user };
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      throw new AuthError("Token expired, please login again");
+    }
+    throw new AuthError("Unauthorized request: Invalid token");
+  }
+};
+
+// Generate JWT Token and attach to response
+export const generateTokenAndSetCookie = (
+  res,
+  user,
+  statusCode = 200,
+  message = "Success"
+) => {
+  const token = user.generateJsonWebToken();
+
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: msConverter(process.env.COOKIE_EXPIRES),
+    path: "/",
   });
+
+  return new ApiResponse(
+    statusCode,
+    {
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+      },
+    },
+    message
+  );
 };
 
 // Middleware to authenticate users
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-  const authToken =
-    req.cookies?.accessToken ||
-    req.header("Authorization")?.replace("Bearer ", "");
+  const { token, user } = await decodeTokenAndGetUser(req);
 
-  // Check if the token exists and starts with "Bearer"
-  throwIf(!authToken, new AuthError("Unauthorized request!"));
+  throwIf(!user, new AuthError("Invalid access token: User not found"));
 
-  try {
-    const decodedToken = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
-
-    // Verify the token
-    const user = await User.findById(decodedToken?._id).select(
-      "-password -refreshToken"
-    );
-
-    throwIf(!user, new AuthError("Invalid access token"));
-
-    // Attach user details to the request object
-    req.userId = user._id;
-    req.userName = user.userName;
-    req.user = user;
-    next();
-  } catch (error) {
-    throwIf(
-      error.name === "TokenExpiredError",
-      new AuthError("Token expired, please login again")
-    );
-
-    throw new AuthError("Login to access this");
-  }
+  req.user = user;
+  req.token = token;
+  next();
 });
 
-// Middleware to authorized access based on roles
-export const authorized = (role) =>
+// Middleware to authorize access based on roles
+export const authorized = (roles) =>
   asyncHandler(async (req, res, next) => {
-    const userId = req.userId;
-    // Find the user
-    const user = await User.findById(userId).select("-password");
+    const { decoded, user } = await decodeTokenAndGetUser(req);
 
-    throwIf(!user, new NotFoundError("User not found"));
+    // Use user.role if user exists, otherwise fall back to decoded.role
+    const userRole = user?.role || decoded.role;
 
-    // Check if the user's role is allowed
+    throwIf(!userRole, new NotFoundError("User role not found"));
     throwIf(
-      !role.includes(user.role),
+      !roles.includes(userRole),
       new ForbiddenError("You are not authorized")
     );
+
+    // Set req.user if available (for downstream middleware)
+    if (user) req.user = user;
     next();
   });

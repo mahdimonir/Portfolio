@@ -6,6 +6,17 @@ module.exports = {
     "./src/components/**/*.{js,jsx}",
     "./src/lib/**/*.{js,jsx}",
   ],
+  // Safelist dynamic gradient utilities (used via runtime/generated class strings)
+  // This prevents Tailwind's JIT/purge from removing classes such as
+  // "from-cyan-400 via-blue-500 to-purple-600" and "bg-gradient-to-br" when
+  // those are applied dynamically in JSX (e.g. getDynamicGradient()).
+  safelist: [
+    { pattern: /bg-gradient-to-(t|b|r|l|tr|tl|br|bl)/ },
+    {
+      pattern:
+        /(from|via|to)-(cyan|blue|purple|emerald|teal|orange|red|pink|indigo|rose|slate|green)-(50|100|200|300|400|500|600|700|800|900)/,
+    },
+  ],
   prefix: "",
   theme: {
     container: {

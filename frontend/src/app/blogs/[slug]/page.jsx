@@ -1,7 +1,5 @@
-"use client";
-
-import { getBlogById } from "@/data/blogs";
-import { motion } from "framer-motion"; // Explicitly import motion
+import serverAxios from "@/lib/serverAxios";
+import { MotionDiv, MotionHeader } from "@/components/ui/motion";
 import Link from "next/link";
 import {
   FaArrowLeft,
@@ -10,10 +8,40 @@ import {
   FaTag,
   FaUser,
 } from "react-icons/fa";
+import ReactMarkdown from "react-markdown";
 
-const Page = async ({ params }) => {
-  const { id } = params; // No need to await since getBlogById is synchronous
-  const blog = getBlogById(id);
+// Define the revalidation time (24 hours)
+export const revalidate = 86400;
+
+// Generate static params for all blog slugs
+export async function generateStaticParams() {
+  try {
+    const response = await serverAxios.get('/blogs');
+    const blogs = response.data.data || [];
+    
+    return blogs.map((blog) => ({
+      slug: blog.slug,
+    }));
+  } catch (error) {
+    console.error('Error generating static params for blogs:', error);
+    return [];
+  }
+}
+
+const getBlog = async (slug) => {
+  try {
+    const response = await serverAxios.get(`/blogs/slug/${slug}`);
+    return response.data.data;
+  } catch (error) {
+    // In a real app, you might want to log this error to a service
+    console.error("Failed to fetch blog:", error);
+    return null;
+  }
+};
+
+const BlogPage = async ({ params }) => {
+  const { slug } = params;
+  const blog = await getBlog(slug);
 
   if (!blog) {
     return (
@@ -22,7 +50,7 @@ const Page = async ({ params }) => {
           Blog Not Found
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          The blog post you're looking for doesn't exist.
+          The blog post you're looking for doesn't exist or couldn't be loaded.
         </p>
         <Link
           href="/blogs"
@@ -39,8 +67,7 @@ const Page = async ({ params }) => {
       <div className="relative">
         <main className="pb-20 pt-8">
           <article className="max-w-4xl mx-auto px-4">
-            {/* Back Button */}
-            <motion.div
+            <MotionDiv
               className="mb-8"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -53,10 +80,9 @@ const Page = async ({ params }) => {
                 <FaArrowLeft />
                 Back to Blog
               </Link>
-            </motion.div>
+            </MotionDiv>
 
-            {/* Article Header */}
-            <motion.header
+            <MotionHeader
               className="mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -76,20 +102,24 @@ const Page = async ({ params }) => {
                 {blog.excerpt}
               </p>
 
-              {/* Meta Information */}
               <div className="flex flex-wrap items-center gap-6 text-gray-500 dark:text-gray-400 mb-8">
                 <div className="flex items-center gap-2">
                   <FaCalendarAlt size={14} />
-                  {new Date(blog.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {new Date(blog.publishedAt || blog.createdAt).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <FaClock size={14} />
-                  {blog.readTime}
-                </div>
+                {blog.readingTime && (
+                  <div className="flex items-center gap-2">
+                    <FaClock size={14} />
+                    {blog.readingTime} min read
+                  </div>
+                )}
                 {blog.author && (
                   <div className="flex items-center gap-2">
                     <FaUser size={14} />
@@ -98,11 +128,10 @@ const Page = async ({ params }) => {
                 )}
               </div>
 
-              {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-8">
-                {blog.tags.map((tag, index) => (
+                {blog.tags.map((tag) => (
                   <span
-                    key={index}
+                    key={tag}
                     className="px-3 py-1 bg-gray-100/80 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 text-sm rounded-full flex items-center gap-1"
                   >
                     <FaTag size={10} />
@@ -110,61 +139,61 @@ const Page = async ({ params }) => {
                   </span>
                 ))}
               </div>
-            </motion.header>
+            </MotionHeader>
 
-            {/* Featured Image */}
-            <motion.div
-              className="mb-12"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <img
-                src={blog.image}
-                alt={blog.title}
-                className="w-full h-64 md:h-96 object-cover rounded-3xl shadow-2xl"
-              />
-            </motion.div>
+            {blog.image?.url && (
+              <MotionDiv
+                className="mb-12"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <img
+                  src={blog.image.url}
+                  alt={blog.title}
+                  className="w-full h-64 md:h-96 object-cover rounded-3xl shadow-2xl"
+                />
+              </MotionDiv>
+            )}
 
-            {/* Article Content */}
-            <motion.div
+            <MotionDiv
               className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 md:p-12 shadow-lg border border-white/20 dark:border-gray-700/30 mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <div className="prose prose-lg dark:prose-invert max-w-none">
-                <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
-                  {blog.content}
-                </div>
+              <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:text-gray-800 dark:prose-headings:text-white prose-a:text-blue-600 hover:prose-a:text-blue-500">
+                <ReactMarkdown>{blog.content}</ReactMarkdown>
               </div>
-            </motion.div>
+            </MotionDiv>
 
-            {/* Author Bio */}
-            <motion.div
-              className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 dark:border-gray-700/30"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {blog.author && (
+            {blog.author && (
+              <MotionDiv
+                className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 dark:border-gray-700/30"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
                 <div className="flex items-center gap-6">
-                  <img
-                    src={blog.author.avatar}
-                    alt={blog.author.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 dark:border-blue-800"
-                  />
+                  {blog.author.avatar?.url && (
+                    <img
+                      src={blog.author.avatar.url}
+                      alt={blog.author.name}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 dark:border-blue-800"
+                    />
+                  )}
                   <div>
                     <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
                       About {blog.author.name}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {blog.author.bio}
+                      {blog.author.bio ||
+                        "A passionate writer and developer."}
                     </p>
                   </div>
                 </div>
-              )}
-            </motion.div>
+              </MotionDiv>
+            )}
           </article>
         </main>
       </div>
@@ -172,4 +201,4 @@ const Page = async ({ params }) => {
   );
 };
 
-export default Page;
+export default BlogPage;

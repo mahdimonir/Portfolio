@@ -1,127 +1,172 @@
-import Experience from '../models/Experience.js';
-import { APIError } from '../middleware/error.js';
-import { uploadImage, deleteImage } from '../utils/cloudinary.js';
+import Experience from "../models/Experience.js";
+import { NotFoundError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { throwIf } from "../utils/throwIf.js";
 
 /**
- * Get all experiences
+ * Get active experiences only
  */
-export const getExperiences = async (req, res) => {
+export const getExperiences = asyncHandler(async (req, res) => {
+  const experiences = await Experience.find({ status: "Active" })
+    .populate("skills", "name category")
+    .sort({ "period.from": -1 });
+
+  res.json(
+    new ApiResponse(200, experiences, "Active experiences fetched successfully")
+  );
+});
+
+/**
+ * Get all experiences (admin use)
+ */
+export const getAllExperiences = asyncHandler(async (req, res) => {
   const experiences = await Experience.find()
-    .sort({ startDate: -1 });
-  res.json(experiences);
-};
+    .populate("skills", "name category")
+    .sort({ "period.from": -1 });
+
+  res.json(
+    new ApiResponse(200, experiences, "All experiences fetched successfully")
+  );
+});
 
 /**
  * Create new experience
  */
-export const createExperience = async (req, res) => {
+export const createExperience = asyncHandler(async (req, res) => {
   const {
+    role,
     company,
-    position,
+    period,
     location,
-    type,
-    startDate,
-    endDate,
-    current,
     description,
-    technologies,
-    highlights,
-    companyUrl
+    skills,
+    achievements,
+    status,
+    current,
+    companyLogo,
+    companyUrl,
   } = req.body;
 
-  // Handle company logo upload if provided
-  let companyLogoUrl;
-  if (req.body.companyLogo) {
-    const uploadResult = await uploadImage(req.body.companyLogo, 'portfolio/experience');
-    companyLogoUrl = uploadResult.url;
+  // Handle period object
+  let periodData = { from: "", to: "Present" };
+  if (period) {
+    if (typeof period === "string") {
+      periodData = JSON.parse(period);
+    } else if (typeof period === "object") {
+      periodData = period;
+    }
   }
 
-  const experience = new Experience({
-    company,
-    position,
-    location,
-    type,
-    startDate,
-    endDate,
-    current,
-    description,
-    technologies,
-    highlights,
-    companyLogo: companyLogoUrl,
-    companyUrl
-  });
+  // Set 'to' field to "Present" if current is true
+  if (current) {
+    periodData.to = "Present";
+  }
 
+  const experienceData = {
+    role: role || "",
+    company: company || "",
+    period: periodData,
+    location: location || "",
+    description: description || "",
+    skills: [],
+    achievements: [],
+    status: status || "Active",
+    current: current || false,
+    companyLogo: companyLogo || null,
+    companyUrl: companyUrl || null,
+  };
+
+  // Handle skills as array of TechStack ObjectIds
+  if (skills) {
+    if (typeof skills === "string") {
+      experienceData.skills = JSON.parse(skills);
+    } else if (Array.isArray(skills)) {
+      experienceData.skills = skills;
+    }
+  }
+
+  // Handle achievements as array
+  if (achievements) {
+    if (typeof achievements === "string") {
+      experienceData.achievements = JSON.parse(achievements);
+    } else if (Array.isArray(achievements)) {
+      experienceData.achievements = achievements;
+    }
+  }
+
+  const experience = new Experience(experienceData);
   await experience.save();
-  res.status(201).json(experience);
-};
+
+  // Populate skills before sending response
+  await experience.populate("skills", "name category");
+
+  res
+    .status(201)
+    .json(ApiResponse.created(experience, "Experience created successfully"));
+});
 
 /**
  * Update experience
  */
-export const updateExperience = async (req, res) => {
+export const updateExperience = asyncHandler(async (req, res) => {
   const experience = await Experience.findById(req.params.id);
-  if (!experience) {
-    throw new APIError('Experience not found', 404);
-  }
+  throwIf(!experience, new NotFoundError("Experience not found"));
 
   const updates = { ...req.body };
 
-  // Handle company logo update
-  if (req.body.companyLogo && req.body.companyLogo !== experience.companyLogo) {
-    const uploadResult = await uploadImage(req.body.companyLogo, 'portfolio/experience');
-    updates.companyLogo = uploadResult.url;
-
-    // Delete old logo if exists
-    if (experience.companyLogo) {
-      const oldLogoId = experience.companyLogo.split('/').slice(-2).join('/');
-      await deleteImage(oldLogoId);
+  // Handle period object
+  if (updates.period) {
+    if (typeof updates.period === "string") {
+      updates.period = JSON.parse(updates.period);
     }
   }
 
+  // Set 'to' field to "Present" if current is true
+  if (updates.current) {
+    if (updates.period) {
+      updates.period.to = "Present";
+    } else {
+      updates.period = { ...experience.period, to: "Present" };
+    }
+  }
+
+  // Handle skills as array of TechStack ObjectIds
+  if (updates.skills) {
+    if (typeof updates.skills === "string") {
+      updates.skills = JSON.parse(updates.skills);
+    } else if (!Array.isArray(updates.skills)) {
+      updates.skills = [];
+    }
+  }
+
+  // Handle achievements as array
+  if (updates.achievements) {
+    if (typeof updates.achievements === "string") {
+      updates.achievements = JSON.parse(updates.achievements);
+    } else if (!Array.isArray(updates.achievements)) {
+      updates.achievements = [];
+    }
+  }
+
+  // Update experience
   Object.assign(experience, updates);
   await experience.save();
 
-  res.json(experience);
-};
+  // Populate skills before sending response
+  await experience.populate("skills", "name category");
+
+  res.json(new ApiResponse(200, experience, "Experience updated successfully"));
+});
 
 /**
  * Delete experience
  */
-export const deleteExperience = async (req, res) => {
+export const deleteExperience = asyncHandler(async (req, res) => {
   const experience = await Experience.findById(req.params.id);
-  if (!experience) {
-    throw new APIError('Experience not found', 404);
-  }
+  throwIf(!experience, new NotFoundError("Experience not found"));
 
-  // Delete company logo from Cloudinary if exists
-  if (experience.companyLogo) {
-    const logoId = experience.companyLogo.split('/').slice(-2).join('/');
-    await deleteImage(logoId);
-  }
+  await experience.deleteOne();
 
-  await experience.remove();
-  res.json({ message: 'Experience deleted successfully' });
-};
-
-/**
- * Update experience order
- */
-export const updateOrder = async (req, res) => {
-  const { orders } = req.body;
-
-  if (!Array.isArray(orders)) {
-    throw new APIError('Orders must be an array of { id, order } objects', 400);
-  }
-
-  // Update orders in parallel
-  await Promise.all(
-    orders.map(({ id, order }) =>
-      Experience.findByIdAndUpdate(id, { order }, { new: true })
-    )
-  );
-
-  const updatedExperiences = await Experience.find()
-    .sort({ order: 1, startDate: -1 });
-
-  res.json(updatedExperiences);
-};
+  res.json(new ApiResponse(200, null, "Experience deleted successfully"));
+});

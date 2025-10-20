@@ -1,30 +1,25 @@
 import crypto from "crypto";
-import { generateToken } from "../middleware/authMiddleware.js";
+import { generateTokenAndSetCookie } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 import {
-  AuthError,
   ConflictError,
   NotFoundError,
   ValidationError,
 } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendPasswordResetEmail } from "../utils/email.js";
-import { msConverter } from "../utils/MSconverter.js";
+import {
+  send2FAVerificationCode,
+  sendPasswordResetEmail,
+} from "../utils/sendMail.js";
 import { throwIf, throwIfInvalid } from "../utils/throwIf.js";
 
-// * Register user
-export const register = asyncHandler(async (req, res, next) => {
+export const register = asyncHandler(async (req, res) => {
   const { fullName, email, password } = req.body;
-
   throwIfInvalid({ FullName: !fullName, Email: !email, Password: !password });
 
   const existingUser = await User.findOne({ email });
-
-  throwIf(
-    existingUser,
-    new ConflictError("User with this email already exists!")
-  );
+  throwIf(existingUser, new ConflictError("User already exists!"));
 
   const user = await User.create({
     fullName,
@@ -32,161 +27,92 @@ export const register = asyncHandler(async (req, res, next) => {
     password,
   });
 
-  const createdUser = await User.findById(user._id).select("-password");
-
-  // Send success response
-  res
-    .status(201)
-    .json(new ApiResponse(201, createdUser, "User registered successfully"));
+  const response = generateTokenAndSetCookie(
+    res,
+    user,
+    201,
+    "User register successfully"
+  );
+  res.json(response);
 });
 
-// * Login user
-export const login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+export const login = asyncHandler(async (req, res) => {
+  const { email, password, code } = req.body;
 
   const user = await User.findOne({ email });
+  throwIf(!user, new ValidationError("Invalid credentials"));
 
-  throwIf(!user, new ValidationError("Invalid user credentials"));
+  const isMatch = await user.isPasswordCorrect(password);
+  if (!isMatch) {
+    throw new ValidationError("Invalid credentials");
+  }
 
-  const isPasswordValid = await user.isPasswordCorrect(password);
-  throwIf(!isPasswordValid, new AuthError("Invalid user credentials"));
+  if (!user.otp || !user.otp.code || !user.otp.expiresAt || !code) {
+    const otp = user.generateOTP();
+    await user.save();
+    await send2FAVerificationCode(user.email, otp, user.fullName);
+    return res.json(
+      new ApiResponse(
+        200,
+        { message: "2FA code sent to email" },
+        "2FA required"
+      )
+    );
+  }
 
-  // Update last login
+  if (!user.verifyOTP(code)) {
+    throw new ValidationError("Invalid or expired 2FA code");
+  }
+  user.clearOTP();
   user.lastLogin = new Date();
   await user.save();
 
-  const token = generateToken(user._id);
-
-  res
-    .status(200)
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: msConverter(process.env.COOKIE_EXPIRES),
-      path: "/",
-    })
-    .json(
-      new ApiResponse(
-        200,
-        {
-          user: {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-            fullName: user.fullName,
-          },
-          token,
-        },
-        "User logged in successfully"
-      )
-    );
+  const response = generateTokenAndSetCookie(
+    res,
+    user,
+    200,
+    "User logged in successfully"
+  );
+  res.json(response);
 });
 
-// * Get current user profile
-export const getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
-  throwIf(!user, new NotFoundError("User not found"));
-  res.json(user);
+export const logout = asyncHandler(async (req, res) => {
+  res.clearCookie("token", { path: "/" });
+  res.json(new ApiResponse(200, null, "Logout successful"));
 });
 
-// * Update user profile
-export const updateProfile = asyncHandler(async (req, res) => {
-  const { email, currentPassword, newPassword } = req.body;
-
-  const user = await User.findById(req.user._id);
-
-  if (email && email !== user.email) {
-    const emailExists = await User.findOne({ email });
-    throwIf(emailExists, new ValidationError("Email already exists"));
-    user.email = email;
-  }
-
-  if (currentPassword && newPassword) {
-    const isMatch = await user.isPasswordCorrect(currentPassword);
-    throwIf(!isMatch, new ValidationError("Current password is incorrect"));
-    user.password = newPassword;
-  }
-
-  await user.save();
-
-  res.json({
-    message: "Profile updated successfully",
-    user: {
-      id: user._id,
-      email: user.email,
-      role: user.role,
-    },
-  });
-});
-
-// * Request password reset - Step 1: Send OTP
-export const forgotPassword = async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-
   const user = await User.findOne({ email });
-  if (!user) {
-    throw new APIError("User not found", 404);
-  }
+  throwIf(!user, new NotFoundError("User not found"));
 
-  // Generate and save OTP
   const otp = user.generateOTP();
   await user.save();
 
-  // Send OTP via email
-  await sendPasswordResetEmail(user.email, otp);
+  await sendPasswordResetEmail(user.email, otp, user.fullName);
+  res.json(new ApiResponse(200, { email: user.email }, "OTP sent to email"));
+});
 
-  res.json({
-    message: "OTP has been sent to your email",
-    email: user.email,
-  });
-};
-
-// * Verify OTP - Step 2: Validate OTP and generate reset token
-export const verifyOTP = async (req, res) => {
+export const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
-
   const user = await User.findOne({ email });
-  if (!user) {
-    throw new APIError("User not found", 404);
-  }
+  throwIf(!user, new NotFoundError("User not found"));
+  throwIf(!user.verifyOTP(otp), new ValidationError("Invalid or expired OTP"));
 
-  if (!user.verifyOTP(otp)) {
-    throw new APIError("Invalid or expired OTP", 400);
-  }
-
-  // Generate reset token after OTP verification
   const resetToken = crypto.randomBytes(32).toString("hex");
   user.passwordResetToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  user.passwordResetExpires = Date.now() + 3600000; // 1 hour
-
-  // Clear OTP after successful verification
+  user.passwordResetExpires = Date.now() + 3600000;
   user.clearOTP();
   await user.save();
 
-  res.json({
-    message: "OTP verified successfully",
-    resetToken,
-  });
+  res.json(new ApiResponse(200, { resetToken }, "OTP verified successfully"));
+});
 
-  try {
-    await sendPasswordResetEmail(user.email, resetToken);
-    res.json({ message: "Password reset email sent" });
-  } catch (error) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    await user.save();
-    throw new APIError("Error sending password reset email", 500);
-  }
-};
-
-// * Reset password
-export const resetPassword = async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body;
-
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await User.findOne({
@@ -194,20 +120,18 @@ export const resetPassword = async (req, res) => {
     passwordResetExpires: { $gt: Date.now() },
   });
 
-  if (!user) {
-    throw new APIError("Invalid or expired reset token", 400);
-  }
+  throwIf(!user, new ValidationError("Invalid or expired reset token"));
 
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
-
   await user.save();
 
-  const authToken = generateToken(user._id);
-
-  res.json({
-    message: "Password reset successful",
-    token: authToken,
-  });
-};
+  const response = generateTokenAndSetCookie(
+    res,
+    user,
+    200,
+    "Password reset successful"
+  );
+  res.json(response);
+});

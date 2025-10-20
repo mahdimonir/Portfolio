@@ -1,25 +1,12 @@
 "use client";
 
-import { projects } from "@/data/projects";
+import { getIconComponent } from "@/components/global/getIconComponent";
 import { getDynamicGradient } from "@/hooks/gradient";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-// Global gradient array
-// const Gradient = [
-//   `from-cyan-400 via-blue-500 to-purple-600`,
-//   `from-emerald-400 via-teal-500 to-cyan-600`,
-//   `from-orange-400 via-red-500 to-pink-600`,
-//   `from-purple-400 via-pink-500 to-rose-600`,
-//   `from-indigo-400 via-blue-500 to-teal-600`,
-// ];
-
-//  const getDynamicGradient = (index) => {
-//   return Gradient[index % Gradient.length];
-// };
-
-const FeaturedProjects = () => {
+const FeaturedProjects = ({ projects }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [windowWidth, setWindowWidth] = useState(1200);
@@ -27,7 +14,7 @@ const FeaturedProjects = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredTech, setHoveredTech] = useState(null);
   const intervalRef = useRef(null);
-  const autoPlayTimeoutRef = useRef(null); // Add timeout ref for auto-play restart
+  const autoPlayTimeoutRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const router = useRouter();
@@ -59,7 +46,7 @@ const FeaturedProjects = () => {
 
   // Optimized auto-play with better cleanup
   useEffect(() => {
-    if (!isAutoPlaying) {
+    if (!isAutoPlaying || projects.length === 0) {
       clearInterval(intervalRef.current);
       return;
     }
@@ -78,7 +65,7 @@ const FeaturedProjects = () => {
     };
   }, []);
 
-  // Memoized responsive settings for better performance
+  // Memoized responsive settings
   const settings = useMemo(() => {
     if (windowWidth < 640) {
       return {
@@ -113,7 +100,7 @@ const FeaturedProjects = () => {
     }
   }, [windowWidth]);
 
-  // Fixed card positioning with proper z-index and mobile-specific adjustments
+  // Fixed card positioning
   const getCardStyle = useCallback(
     (index) => {
       const totalCards = projects.length;
@@ -127,7 +114,6 @@ const FeaturedProjects = () => {
 
       const isMobile = windowWidth < 640;
 
-      // Center card (active slide) - highest z-index
       if (position === 0) {
         return {
           x: 0,
@@ -143,7 +129,6 @@ const FeaturedProjects = () => {
       const absPosition = Math.abs(position);
       const side = position > 0 ? 1 : -1;
 
-      // First adjacent cards
       if (absPosition === 1) {
         return {
           x: side * settings.sideOffset,
@@ -154,9 +139,7 @@ const FeaturedProjects = () => {
           zIndex: isMobile ? 5 : 15,
           opacity: isMobile ? 0.6 : 0.85,
         };
-      }
-      // Second adjacent cards
-      else if (absPosition === 2) {
+      } else if (absPosition === 2) {
         return {
           x: side * (settings.sideOffset + (isMobile ? 120 : 80)),
           y: isMobile ? 40 : 5,
@@ -166,9 +149,7 @@ const FeaturedProjects = () => {
           zIndex: isMobile ? 3 : 10,
           opacity: isMobile ? 0.4 : 0.7,
         };
-      }
-      // Far cards
-      else {
+      } else {
         return {
           x: side * (settings.sideOffset + (isMobile ? 200 : 160)),
           y: isMobile ? 60 : 10,
@@ -183,20 +164,16 @@ const FeaturedProjects = () => {
     [currentIndex, settings, projects.length, windowWidth]
   );
 
-  // Helper function to pause auto-play temporarily
+  // Pause auto-play temporarily
   const pauseAutoPlayTemporarily = useCallback(() => {
     setIsAutoPlaying(false);
-
-    // Clear any existing timeout
     clearTimeout(autoPlayTimeoutRef.current);
-
-    // Restart auto-play after 10 seconds
     autoPlayTimeoutRef.current = setTimeout(() => {
       setIsAutoPlaying(true);
     }, 10000);
   }, []);
 
-  // Enhanced touch handling to prevent conflicts with click
+  // Touch handling
   const handleTouchStart = (e) => {
     touchStartX.current = e.targetTouches[0].clientX;
     setIsDragging(false);
@@ -205,8 +182,6 @@ const FeaturedProjects = () => {
   const handleTouchMove = (e) => {
     touchEndX.current = e.targetTouches[0].clientX;
     const distance = Math.abs(touchStartX.current - touchEndX.current);
-
-    // If user has moved more than 10px, consider it a drag
     if (distance > 10) {
       setIsDragging(true);
     }
@@ -228,31 +203,26 @@ const FeaturedProjects = () => {
     setIsDragging(false);
   };
 
-  // Modified card click handler - only for side cards to center them
+  // Card click handler
   const handleCardClick = useCallback(
     (index, e) => {
-      // Don't do anything if user was dragging
       if (isDragging) return;
-
-      // Check if the click target is the button or inside the button
       if (e.target.closest("button") && index === currentIndex) {
-        return; // Let button handle its own click
+        return;
       }
-
-      // Only handle clicks on side cards to center them
       if (index !== currentIndex) {
         setCurrentIndex(index);
-        pauseAutoPlayTemporarily(); // Use the helper function
+        pauseAutoPlayTemporarily();
       }
     },
     [isDragging, currentIndex, pauseAutoPlayTemporarily]
   );
 
-  // Handler for "View Details" button
+  // View details handler
   const handleViewDetails = useCallback(
     (projectName, e) => {
-      e.stopPropagation(); // Prevent card click
-      pauseAutoPlayTemporarily(); // Pause auto-play when button is clicked
+      e.stopPropagation();
+      pauseAutoPlayTemporarily();
       router.push(`/projects/${projectName}`);
     },
     [router, pauseAutoPlayTemporarily]
@@ -260,39 +230,36 @@ const FeaturedProjects = () => {
 
   const nextProject = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % projects.length);
-    pauseAutoPlayTemporarily(); // Use the helper function
+    pauseAutoPlayTemporarily();
   }, [projects.length, pauseAutoPlayTemporarily]);
 
   const prevProject = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + projects.length) % projects.length);
-    pauseAutoPlayTemporarily(); // Use the helper function
+    pauseAutoPlayTemporarily();
   }, [projects.length, pauseAutoPlayTemporarily]);
 
   const goToSlide = useCallback(
     (index) => {
       setCurrentIndex(index);
-      pauseAutoPlayTemporarily(); // Use the helper function
+      pauseAutoPlayTemporarily();
     },
     [pauseAutoPlayTemporarily]
   );
 
-  // Toggle auto-play function
   const toggleAutoPlay = useCallback(() => {
     setIsAutoPlaying((prev) => {
       const newState = !prev;
-
-      // Clear any pending restart timeout when manually toggling
       clearTimeout(autoPlayTimeoutRef.current);
-
       return newState;
     });
   }, []);
 
-  if (!isClient) {
-    return <div className="min-h-screen bg-slate-900" />;
+  if (!isClient || projects.length === 0) {
+    return null; // Skip rendering if not client-side or no projects
   }
 
   return (
+    // <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 overflow-hidden relative min-h-screen flex items-center">
     <section className="py-16 md:py-24 px-4 section-gradient-bg overflow-hidden relative min-h-screen flex items-center">
       <div className="w-full max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -413,6 +380,9 @@ const FeaturedProjects = () => {
                       <div
                         className={`absolute inset-0 bg-gradient-to-br ${dynamicGradient} opacity-5`}
                       />
+                      {/* <div
+                        className={`absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 opacity-5`}
+                      /> */}
 
                       {/* Project Image */}
                       <div className="relative h-40 md:h-52 overflow-hidden">
@@ -437,55 +407,59 @@ const FeaturedProjects = () => {
                           </span>
                         </div>
 
-                        {/* Action Links - Only show on center card */}
+                        {/* Action Links */}
                         {isCenter && (
                           <div className="absolute top-3 right-3 flex gap-2">
-                            <motion.a
-                              href={project.github}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-slate-900/60 backdrop-blur-md text-white rounded-full hover:bg-slate-900/80 transition-all duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                pauseAutoPlayTemporarily(); // Pause auto-play on link click
-                              }}
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
+                            {project.github && (
+                              <motion.a
+                                href={project.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-slate-900/60 backdrop-blur-md text-white rounded-full hover:bg-slate-900/80 transition-all duration-200"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  pauseAutoPlayTemporarily();
+                                }}
                               >
-                                <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                              </svg>
-                            </motion.a>
-                            <motion.a
-                              href={project.demo}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 bg-blue-600/80 backdrop-blur-md text-white rounded-full hover:bg-blue-600/90 transition-all duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                pauseAutoPlayTemporarily(); // Pause auto-play on link click
-                              }}
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                                </svg>
+                              </motion.a>
+                            )}
+                            {project.demo && (
+                              <motion.a
+                                href={project.demo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-blue-600/80 backdrop-blur-md text-white rounded-full hover:bg-blue-600/90 transition-all duration-200"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  pauseAutoPlayTemporarily();
+                                }}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                />
-                              </svg>
-                            </motion.a>
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                  />
+                                </svg>
+                              </motion.a>
+                            )}
                           </div>
                         )}
                       </div>
@@ -500,53 +474,53 @@ const FeaturedProjects = () => {
                           {project.description}
                         </p>
 
-                        {/* Tech Stack with hover tooltips and +more indicator */}
+                        {/* Tech Stack */}
                         <div className="flex justify-center flex-wrap gap-2 mb-4 relative">
-                          {Array.isArray(project.tech) ? (
+                          {Array.isArray(project.tech) &&
+                          project.tech.length > 0 ? (
                             <>
                               {project.tech
                                 .slice(0, 4)
-                                .map((tech, techIndex) => (
-                                  <motion.div
-                                    key={techIndex}
-                                    className="relative p-2 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full border border-blue-500/20 transition-all duration-200 cursor-pointer"
-                                    onMouseEnter={() =>
-                                      setHoveredTech(`${index}-${techIndex}`)
-                                    }
-                                    onMouseLeave={() => setHoveredTech(null)}
-                                    whileHover={{ scale: 1.1 }}
-                                  >
-                                    <tech.icon size={16} />
-
-                                    {/* Tooltip */}
-                                    {hoveredTech ===
-                                      `${index}-${techIndex}` && (
-                                      <motion.div
-                                        initial={{
-                                          opacity: 0,
-                                          y: -10,
-                                          scale: 0.8,
-                                        }}
-                                        animate={{
-                                          opacity: 1,
-                                          y: -12,
-                                          scale: 1,
-                                        }}
-                                        exit={{
-                                          opacity: 0,
-                                          y: -10,
-                                          scale: 0.8,
-                                        }}
-                                        className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded shadow-lg border border-slate-600 whitespace-nowrap z-50"
-                                      >
-                                        {tech.name}
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                                      </motion.div>
-                                    )}
-                                  </motion.div>
-                                ))}
-
-                              {/* +More indicator */}
+                                .map((tech, techIndex) => {
+                                  const Icon = getIconComponent(tech.icon);
+                                  return (
+                                    <motion.div
+                                      key={techIndex}
+                                      className="relative p-2 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-full border border-blue-500/20 transition-all duration-200 cursor-pointer"
+                                      onMouseEnter={() =>
+                                        setHoveredTech(`${index}-${techIndex}`)
+                                      }
+                                      onMouseLeave={() => setHoveredTech(null)}
+                                      whileHover={{ scale: 1.1 }}
+                                    >
+                                      <Icon size={16} />
+                                      {hoveredTech ===
+                                        `${index}-${techIndex}` && (
+                                        <motion.div
+                                          initial={{
+                                            opacity: 0,
+                                            y: -10,
+                                            scale: 0.8,
+                                          }}
+                                          animate={{
+                                            opacity: 1,
+                                            y: -12,
+                                            scale: 1,
+                                          }}
+                                          exit={{
+                                            opacity: 0,
+                                            y: -10,
+                                            scale: 0.8,
+                                          }}
+                                          className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded shadow-lg border border-slate-600 whitespace-nowrap z-50"
+                                        >
+                                          {tech.name}
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                        </motion.div>
+                                      )}
+                                    </motion.div>
+                                  );
+                                })}
                               {project.tech.length > 4 && (
                                 <motion.div
                                   className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-slate-600/20 to-slate-500/20 text-slate-400 text-xs rounded-full font-medium border border-slate-500/20"
@@ -563,7 +537,7 @@ const FeaturedProjects = () => {
                           )}
                         </div>
 
-                        {/* CTA Button - Only show on center card */}
+                        {/* CTA Button */}
                         {isCenter && (
                           <motion.button
                             className={`w-full py-3 px-6 bg-gradient-to-r ${dynamicGradient} text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer relative z-10`}
@@ -582,12 +556,13 @@ const FeaturedProjects = () => {
             </AnimatePresence>
           </div>
 
-          {/* Navigation Arrows - Hidden on mobile */}
+          {/* Navigation Arrows */}
           <motion.button
             onClick={prevProject}
             className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-slate-800/80 backdrop-blur-xl rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 text-white z-30 border border-slate-700/50 hover:border-slate-600/70"
             whileHover={{ scale: 1.05, x: -3 }}
             whileTap={{ scale: 0.95 }}
+            disabled={projects.length <= 1}
           >
             <svg
               className="w-5 h-5"
@@ -609,6 +584,7 @@ const FeaturedProjects = () => {
             className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-slate-800/80 backdrop-blur-xl rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 text-white z-30 border border-slate-700/50 hover:border-slate-600/70"
             whileHover={{ scale: 1.05, x: 3 }}
             whileTap={{ scale: 0.95 }}
+            disabled={projects.length <= 1}
           >
             <svg
               className="w-5 h-5"

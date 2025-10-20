@@ -35,9 +35,9 @@ app.use(
   fileUpload({
     useTempFiles: true,
     tempFileDir: "/temp/",
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     abortOnLimit: true,
-    responseOnLimit: "File size limit has been reached (5MB)"
+    responseOnLimit: "File size limit has been reached (5MB)",
   })
 );
 
@@ -47,7 +47,10 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: "Too many requests, please try again later" }
+  message: {
+    success: false,
+    message: "Too many requests, please try again later",
+  },
 });
 app.use(limiter);
 

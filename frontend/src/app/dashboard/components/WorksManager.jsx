@@ -1,23 +1,21 @@
 "use client";
 
+import { getIconComponent } from "@/components/global/getIconComponent";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import axios from "@/lib/axios";
+import { getStatusColor, getStatusIcon } from "@/lib/status";
+import { slugGenerator } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import {
-  FaBars,
-  FaBriefcase,
-  FaEdit,
-  FaEye,
-  FaPlus,
-  FaProjectDiagram,
-  FaQuoteLeft,
-  FaServer,
-  FaTimes,
-  FaTrash,
-  FaUser,
-} from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import SectionVisibilityManager from "./works/SectionVisibilityManager";
+import BlogForm from "./works/BlogForm";
+import ConsultationsManager from "./works/ConsultationsManager";
+import ExperiencesForm from "./works/ExperiencesForm";
+import ProjectForm from "./works/ProjectForm";
+import ServiceForm from "./works/ServiceForm";
+import TechStackForm from "./works/TechStackForm";
 import TechStackManager from "./works/TechStackManager";
+import TestimonialForm from "./works/TestimonialForm";
 
 const WorksManager = () => {
   const [activeTab, setActiveTab] = useState("projects");
@@ -25,142 +23,153 @@ const WorksManager = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
-  // Mock data - replace with real data from localStorage
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "E-commerce Platform",
-      status: "Published",
-      lastUpdated: "2 days ago",
-      description: "Full-stack e-commerce solution",
-      technologies: ["React", "Node.js", "MongoDB"],
-    },
-    {
-      id: 2,
-      name: "Portfolio Website",
-      status: "Draft",
-      lastUpdated: "1 week ago",
-      description: "Personal portfolio website",
-      technologies: ["React", "Tailwind CSS"],
-    },
-    {
-      id: 3,
-      name: "Mobile App UI",
-      status: "Published",
-      lastUpdated: "3 days ago",
-      description: "Modern mobile app interface",
-      technologies: ["React Native", "TypeScript"],
-    },
-  ]);
+  // Real data from database
+  const [projects, setProjects] = useState([]);
+  const [services, setServices] = useState([]);
+  const [experiences, setExperiences] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [techStacks, setTechStacks] = useState([]);
+  const [blogs, setBlogs] = useState([]);
+  const [blogCategories, setBlogCategories] = useState([]);
 
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: "Full Stack Development",
-      status: "Active",
-      category: "Development",
-      price: "$150/hour",
-      description: "Complete web application development",
-    },
-    {
-      id: 2,
-      name: "UI/UX Design",
-      status: "Active",
-      category: "Design",
-      price: "$100/hour",
-      description: "User interface and experience design",
-    },
-    {
-      id: 3,
-      name: "Consulting",
-      status: "Pending",
-      category: "Business",
-      price: "$200/hour",
-      description: "Technical consulting services",
-    },
-  ]);
+  // Global filters
+  const [filterQuery, setFilterQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortOption, setSortOption] = useState("newest");
 
-  const [experiences, setExperiences] = useState([
-    {
-      id: 1,
-      company: "Tech Innovators Inc.",
-      position: "Senior Developer",
-      status: "Current",
-      duration: "2022 - Present",
-      description: "Leading frontend development team",
-    },
-    {
-      id: 2,
-      company: "Digital Solutions Ltd.",
-      position: "Full Stack Developer",
-      status: "Past",
-      duration: "2020 - 2022",
-      description: "Developed multiple web applications",
-    },
-    {
-      id: 3,
-      company: "Startup Hub",
-      position: "Frontend Developer",
-      status: "Past",
-      duration: "2018 - 2020",
-      description: "Built responsive user interfaces",
-    },
-  ]);
+  // Fetch data from backend
+  useEffect(() => {
+    fetchProjects();
+    fetchServices();
+    fetchExperiences();
+    fetchTestimonials();
+    fetchTechStacks();
+    fetchBlogs();
+  }, []);
 
-  const [testimonials, setTestimonials] = useState([
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      company: "TechCorp Inc.",
-      status: "Published",
-      rating: 5,
-      content: "Excellent work and professional service!",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      company: "InnovateLab",
-      status: "Published",
-      rating: 5,
-      content: "Outstanding developer with great communication skills.",
-    },
-    {
-      id: 3,
-      name: "Emily Rodriguez",
-      company: "Digital Solutions",
-      status: "Draft",
-      rating: 4,
-      content: "Very satisfied with the project delivery.",
-    },
-  ]);
-
-  const tabs = [
-    { id: "projects", label: "Projects", icon: FaProjectDiagram },
-    { id: "services", label: "Services", icon: FaBriefcase },
-    { id: "experiences", label: "Experiences", icon: FaUser },
-    { id: "testimonials", label: "Testimonials", icon: FaQuoteLeft },
-    { id: "techstack", label: "Tech Stack", icon: FaServer },
-    { id: "sections", label: "Page Sections", icon: FaEye },
-  ];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Published":
-      case "Active":
-      case "Current":
-        return "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30";
-      case "Draft":
-      case "Pending":
-        return "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30";
-      case "Past":
-        return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30";
-      default:
-        return "text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/30";
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/projects/all");
+      setProjects(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to fetch projects");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fetchServices = async () => {
+    try {
+      const response = await axios.get("/services/all");
+      setServices(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      // Don't show error toast for services if endpoint doesn't exist yet
+    }
+  };
+
+  const fetchExperiences = async () => {
+    try {
+      const response = await axios.get("/experiences/all"); // Get all experiences for admin
+      setExperiences(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching experiences:", error);
+      toast.error("Failed to fetch experiences");
+    }
+  };
+
+  const fetchTestimonials = async () => {
+    try {
+      const response = await axios.get("/testimonials/all"); // Get all testimonials for admin
+      setTestimonials(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      toast.error("Failed to fetch testimonials");
+    }
+  };
+
+  const fetchTechStacks = async () => {
+    try {
+      const response = await axios.get("/techstacks");
+      setTechStacks(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching tech stacks:", error);
+      // Optionally show a toast or error
+    }
+  };
+
+  const fetchBlogs = async () => {
+    try {
+      const response = await axios.get("/blogs/all");
+      const fetchedBlogs = response.data.data || [];
+      setBlogs(fetchedBlogs);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+      toast.error("Failed to fetch blogs");
+    }
+  };
+
+  const tabs = [
+    { id: "projects", label: "Projects", icon: "FaProjectDiagram" },
+    { id: "blogs", label: "Blogs", icon: "FaBlog" },
+    { id: "services", label: "Services", icon: "FaBriefcase" },
+    { id: "experiences", label: "Experiences", icon: "FaUser" },
+    { id: "testimonials", label: "Testimonials", icon: "FaQuoteLeft" },
+    { id: "techstack", label: "Tech Stack", icon: "FaServer" },
+    {
+      id: "consultations",
+      label: "Consultation Manager",
+      icon: "FaCalendarAlt",
+    },
+  ];
+
+  // Function to clean up corrupted features for display
+  const cleanFeaturesForDisplay = (features) => {
+    if (!Array.isArray(features)) return [];
+
+    return features
+      .map((feature) => {
+        // If feature is a string that looks like JSON, try to parse it
+        if (
+          typeof feature === "string" &&
+          feature.startsWith("[") &&
+          feature.endsWith("]")
+        ) {
+          try {
+            const parsed = JSON.parse(feature);
+            // If parsed is an array, take the first item
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed[0];
+            }
+          } catch (e) {
+            // If parsing fails, return the original string
+            return feature;
+          }
+        }
+        return feature;
+      })
+      .filter((feature) => feature && feature.trim() !== "");
+  };
+
+  const consultationsRef = useRef(null);
+
   const handleAdd = (type) => {
+    if (type === "consultations") {
+      consultationsRef.current?.openCreateSlot?.();
+      return;
+    }
     setEditingItem(null);
     setFormData({});
     setIsFormOpen(true);
@@ -172,430 +181,214 @@ const WorksManager = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id, type) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      switch (type) {
-        case "projects":
-          setProjects(projects.filter((p) => p.id !== id));
-          break;
-        case "services":
-          setServices(services.filter((s) => s.id !== id));
-          break;
-        case "experiences":
-          setExperiences(experiences.filter((e) => e.id !== id));
-          break;
-        case "testimonials":
-          setTestimonials(testimonials.filter((t) => t.id !== id));
-          break;
-      }
-      toast.success("Item deleted successfully!");
-    }
+  const handleDelete = (id, type, itemName) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Confirm Delete",
+      message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          switch (type) {
+            case "projects":
+              await axios.delete(`/projects/${id}`);
+              setProjects(projects.filter((p) => p._id !== id));
+              break;
+            case "blogs":
+              await axios.delete(`/blogs/${id}`);
+              setBlogs(blogs.filter((b) => b._id !== id));
+              break;
+            case "services":
+              await axios.delete(`/services/${id}`);
+              setServices(services.filter((s) => s._id !== id));
+              break;
+            case "experiences":
+              await axios.delete(`/experiences/${id}`);
+              setExperiences(experiences.filter((e) => e._id !== id));
+              break;
+            case "testimonials":
+              await axios.delete(`/testimonials/${id}`);
+              setTestimonials(testimonials.filter((t) => t._id !== id));
+              break;
+            case "techstack":
+              await axios.delete(
+                `/techstacks/${encodeURIComponent(id)}/${encodeURIComponent(
+                  itemName
+                )}`
+              );
+              setTechStacks(
+                techStacks.map((stack) =>
+                  stack.category === id
+                    ? {
+                        ...stack,
+                        technologies: stack.technologies.filter(
+                          (t) => t.name !== itemName
+                        ),
+                      }
+                    : stack
+                )
+              );
+              break;
+          }
+          toast.success("Item deleted successfully!");
+        } catch (error) {
+          console.error("Error deleting item:", error);
+          toast.error("Failed to delete item");
+        }
+      },
+    });
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    const newItem = {
-      ...formData,
-      id: editingItem ? editingItem.id : Date.now(),
-      lastUpdated: editingItem ? "Just now" : new Date().toLocaleDateString(),
-    };
-
-    switch (activeTab) {
-      case "projects":
-        if (editingItem) {
-          setProjects(
-            projects.map((p) => (p.id === editingItem.id ? newItem : p))
-          );
-        } else {
-          setProjects([...projects, newItem]);
-        }
-        break;
-      case "services":
-        if (editingItem) {
-          setServices(
-            services.map((s) => (s.id === editingItem.id ? newItem : s))
-          );
-        } else {
-          setServices([...services, newItem]);
-        }
-        break;
-      case "experiences":
-        if (editingItem) {
-          setExperiences(
-            experiences.map((e) => (e.id === editingItem.id ? newItem : e))
-          );
-        } else {
-          setExperiences([...experiences, newItem]);
-        }
-        break;
-      case "testimonials":
-        if (editingItem) {
-          setTestimonials(
-            testimonials.map((t) => (t.id === editingItem.id ? newItem : t))
-          );
-        } else {
-          setTestimonials([...testimonials, newItem]);
-        }
-        break;
+  const handleProjectSave = (savedProject) => {
+    if (editingItem) {
+      setProjects(
+        projects.map((p) => (p._id === editingItem._id ? savedProject : p))
+      );
+      toast.success("Project updated successfully!");
+    } else {
+      setProjects([savedProject, ...projects]);
+      toast.success("Project created successfully!");
     }
-
     setIsFormOpen(false);
     setEditingItem(null);
     setFormData({});
-    toast.success(
-      `${activeTab.slice(0, -1)} ${
-        editingItem ? "updated" : "added"
-      } successfully!`
-    );
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleBlogSave = (savedBlog) => {
+    // Ensure savedBlog has all required fields
+    if (!savedBlog || !savedBlog._id) {
+      console.error("Invalid blog data received:", savedBlog);
+      toast.error("Failed to save blog: Invalid data received");
+      return;
+    }
+
+    if (editingItem) {
+      setBlogs(blogs.map((b) => (b._id === editingItem._id ? savedBlog : b)));
+      toast.success("Blog post updated successfully!");
+    } else {
+      setBlogs([savedBlog, ...blogs]);
+      toast.success("Blog post created successfully!");
+    }
+    // Refresh categories in case a new one was added
+    const categories = [
+      "all",
+      ...new Set(
+        [...blogs, savedBlog]
+          .filter((b) => b && b.category)
+          .map((b) => b.category)
+      ),
+    ];
+    setBlogCategories(categories);
+    setIsFormOpen(false);
+    setEditingItem(null);
+    setFormData({});
+
+    // Refresh blogs to ensure we have the latest data
+    fetchBlogs();
   };
 
-  const renderForm = () => {
-    const isEditing = !!editingItem;
+  const handleServiceSave = (savedService) => {
+    if (editingItem) {
+      setServices(
+        services.map((s) => (s._id === editingItem._id ? savedService : s))
+      );
+      toast.success("Service updated successfully!");
+    } else {
+      setServices([savedService, ...services]);
+      toast.success("Service created successfully!");
+    }
+    setIsFormOpen(false);
+    setEditingItem(null);
+    setFormData({});
+  };
 
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto mb-20"
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEditing ? "Edit" : "Add"}{" "}
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
-            </h2>
-            <button
-              onClick={() => setIsFormOpen(false)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FaTimes />
-            </button>
-          </div>
+  const handleExperienceSave = (savedExperience) => {
+    if (editingItem) {
+      setExperiences(
+        experiences.map((e) =>
+          e._id === editingItem._id ? savedExperience : e
+        )
+      );
+      toast.success("Experience updated successfully!");
+    } else {
+      setExperiences([savedExperience, ...experiences]);
+      toast.success("Experience created successfully!");
+    }
+    setIsFormOpen(false);
+    setEditingItem(null);
+    setFormData({});
+  };
 
-          <form onSubmit={handleSave} className="space-y-4">
-            {activeTab === "projects" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Technologies (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    name="technologies"
-                    value={
-                      Array.isArray(formData.technologies)
-                        ? formData.technologies.join(", ")
-                        : formData.technologies || ""
-                    }
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        technologies: e.target.value.split(", "),
-                      }))
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="React, Node.js, MongoDB"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status || "Draft"}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="Draft">Draft</option>
-                    <option value="Published">Published</option>
-                  </select>
-                </div>
-              </>
-            )}
+  const handleTestimonialSave = (savedTestimonial) => {
+    if (editingItem) {
+      setTestimonials(
+        testimonials.map((t) =>
+          t._id === editingItem._id ? savedTestimonial : t
+        )
+      );
+      toast.success("Testimonial updated successfully!");
+    } else {
+      setTestimonials([savedTestimonial, ...testimonials]);
+      toast.success("Testimonial created successfully!");
+    }
+    setIsFormOpen(false);
+    setEditingItem(null);
+    setFormData({});
+  };
 
-            {activeTab === "services" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Service Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Category
-                    </label>
-                    <input
-                      type="text"
-                      name="category"
-                      value={formData.category || ""}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Price
-                    </label>
-                    <input
-                      type="text"
-                      name="price"
-                      value={formData.price || ""}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="$100/hour"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status || "Active"}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </>
-            )}
+  const handleTechStackSave = async (formTech) => {
+    try {
+      let updatedCategory;
+      if (editingItem) {
+        // Update existing tech (PATCH, not PUT)
+        const res = await axios.patch(
+          `/techstacks/${encodeURIComponent(
+            formTech.category
+          )}/${encodeURIComponent(editingItem.name)}`,
+          {
+            // If renaming, send newName; otherwise, just send the fields
+            newName: formTech.name,
+            tagline: formTech.tagline,
+            icon: formTech.icon,
+            color: formTech.color,
+          }
+        );
+        updatedCategory = res.data.data;
+      } else {
+        // Create new tech
+        const res = await axios.post("/techstacks", formTech);
+        updatedCategory = res.data.data;
+      }
 
-            {activeTab === "experiences" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={formData.position || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Duration
-                  </label>
-                  <input
-                    type="text"
-                    name="duration"
-                    value={formData.duration || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="2020 - 2022"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status || "Past"}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="Current">Current</option>
-                    <option value="Past">Past</option>
-                  </select>
-                </div>
-              </>
-            )}
+      // Update local state: replace the category with the updated one
+      setTechStacks((prev) => {
+        const idx = prev.findIndex(
+          (c) => c.category === updatedCategory.category
+        );
+        if (idx !== -1) {
+          // Replace the category
+          const arr = [...prev];
+          arr[idx] = updatedCategory;
+          return arr;
+        } else {
+          // Add new category
+          return [...prev, updatedCategory];
+        }
+      });
 
-            {activeTab === "testimonials" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Client Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Company
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Testimonial Content
-                  </label>
-                  <textarea
-                    name="content"
-                    value={formData.content || ""}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Rating
-                    </label>
-                    <select
-                      name="rating"
-                      value={formData.rating || 5}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value={5}>5 Stars</option>
-                      <option value={4}>4 Stars</option>
-                      <option value={3}>3 Stars</option>
-                      <option value={2}>2 Stars</option>
-                      <option value={1}>1 Star</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status || "Published"}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="Published">Published</option>
-                      <option value="Draft">Draft</option>
-                    </select>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex gap-4 pt-4">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
-              >
-                {isEditing ? "Update" : "Add"}{" "}
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </motion.button>
-            </div>
-          </form>
-        </motion.div>
-      </div>
-    );
+      setIsFormOpen(false);
+      setEditingItem(null);
+      setFormData({});
+      toast.success(
+        editingItem
+          ? "Tech updated successfully!"
+          : "Tech created successfully!"
+      );
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to save technology. Please try again."
+      );
+    }
   };
 
   const renderTabContent = () => {
@@ -603,25 +396,92 @@ const WorksManager = () => {
       switch (activeTab) {
         case "projects":
           return projects;
+        case "blogs":
+          return blogs;
         case "services":
           return services;
         case "experiences":
           return experiences;
         case "testimonials":
           return testimonials;
+        case "techstack":
+          return techStacks;
         default:
           return [];
       }
     };
 
+    // Helper to get comparable title/name for filters
+    const getComparableText = (item) => {
+      if (!item) return "";
+      switch (activeTab) {
+        case "projects":
+          return `${item.title || ""} ${item.description || ""}`.toLowerCase();
+        case "blogs":
+          return `${item.title || ""} ${item.excerpt || ""} ${
+            item.category || ""
+          }`.toLowerCase();
+        case "services":
+          return `${item.title || ""} ${item.description || ""}`.toLowerCase();
+        case "experiences":
+          return `${item.company || ""} ${item.role || ""} ${
+            item.description || ""
+          }`.toLowerCase();
+        case "testimonials":
+          return `${item.name || ""} ${item.company || ""} ${
+            item.role || ""
+          }`.toLowerCase();
+        case "techstack":
+          return `${item.category || ""} ${(item.technologies || [])
+            .map((t) => t.name || "")
+            .join(" ")}`.toLowerCase();
+        default:
+          return "";
+      }
+    };
+
     const data = getData();
 
-    if (activeTab === "techstack") {
-      return <TechStackManager />;
+    // Apply global filters (consultations handled in child but we still show controls)
+    let filteredData = data;
+    if (filterQuery.trim()) {
+      const q = filterQuery.trim().toLowerCase();
+      filteredData = filteredData.filter((item) =>
+        getComparableText(item).includes(q)
+      );
     }
+    if (filterStatus !== "all") {
+      filteredData = filteredData.filter(
+        (item) => String(item?.status || "").toLowerCase() === filterStatus
+      );
+    }
+    // Sorting
+    filteredData = [...filteredData].sort((a, b) => {
+      const aDate = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
+      const bDate = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
+      const aTitle = (a?.title || a?.name || a?.company || "").toLowerCase();
+      const bTitle = (b?.title || b?.name || b?.company || "").toLowerCase();
+      switch (sortOption) {
+        case "oldest":
+          return aDate - bDate;
+        case "a-z":
+          return aTitle.localeCompare(bTitle);
+        case "z-a":
+          return bTitle.localeCompare(aTitle);
+        case "newest":
+        default:
+          return bDate - aDate;
+      }
+    });
 
-    if (activeTab === "sections") {
-      return <SectionVisibilityManager />;
+    // For techstack and consultations, we'll still show the common header and filters below
+
+    if (loading && activeTab !== "blogs") {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      );
     }
 
     return (
@@ -636,178 +496,771 @@ const WorksManager = () => {
             onClick={() => handleAdd(activeTab)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium shadow-lg w-full sm:w-auto justify-center"
           >
-            <FaPlus size={16} />
-            Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
+            {getIconComponent("FaPlus")({ size: 16 })}
+            Add{" "}
+            {activeTab === "consultations"
+              ? "Time Slot"
+              : activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)}
           </motion.button>
         </div>
 
-        <div className="grid gap-4">
-          {data.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white/50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30"
+        {/* Global Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {item.name || item.company}
-                  </h4>
-                  {item.position && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.position}
-                    </p>
-                  )}
-                  {item.category && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Category: {item.category}
-                    </p>
-                  )}
-                  {item.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {item.description}
-                    </p>
-                  )}
-                  {item.content && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      "{item.content}"
-                    </p>
-                  )}
-                  {item.lastUpdated && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Updated {item.lastUpdated}
-                    </p>
-                  )}
-                  {item.rating && (
-                    <div className="flex items-center gap-1 mt-1">
-                      {[...Array(item.rating)].map((_, i) => (
-                        <span key={i} className="text-yellow-400">
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      item.status
-                    )}`}
+              <option value="all">All statuses</option>
+              {Array.from(
+                new Set(
+                  (filteredData || [])
+                    .map((it) =>
+                      String(it?.status || "")
+                        .trim()
+                        .toLowerCase()
+                    )
+                    .filter(Boolean)
+                )
+              ).map((statusKey) => (
+                <option key={statusKey} value={statusKey}>
+                  {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="newest">Sort: Newest</option>
+              <option value="oldest">Sort: Oldest</option>
+              <option value="a-z">Sort: A → Z</option>
+              <option value="z-a">Sort: Z → A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Techstack and Consultations special rendering below filters */}
+        {activeTab === "techstack" && (
+          <div className="mt-2">
+            <TechStackManager
+              techStacks={filteredData}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              onAdd={handleAdd}
+              itemsPerPage={12}
+            />
+          </div>
+        )}
+        {activeTab === "consultations" && (
+          <div className="mt-2">
+            <ConsultationsManager
+              filterQuery={filterQuery}
+              filterStatus={filterStatus}
+              sortOption={sortOption}
+              ref={consultationsRef}
+            />
+          </div>
+        )}
+
+        {(
+          activeTab !== "consultations" && activeTab !== "techstack"
+            ? filteredData.length === 0
+            : false
+        ) ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            No {activeTab} found. Click the button above to add your first{" "}
+            {activeTab.slice(0, -1)}.
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {(activeTab !== "consultations" && activeTab !== "techstack"
+              ? (() => {
+                  const start = (currentPage - 1) * itemsPerPage;
+                  const end = start + itemsPerPage;
+                  return filteredData.slice(start, end);
+                })()
+              : []
+            ).map((item) => {
+              const IconComponent = getIconComponent("FaEdit");
+              const TrashIcon = getIconComponent("FaTrash");
+              // PROJECTS CARD
+              if (activeTab === "projects") {
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 dark:border-gray-600/40 flex flex-col sm:flex-row gap-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
                   >
-                    {item.status}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleEdit(item, activeTab)}
-                      className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
-                    >
-                      <FaEdit size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id, activeTab)}
-                      className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
-                    >
-                      <FaTrash size={14} />
-                    </button>
+                    <div className="relative group/image">
+                      <img
+                        src={
+                          item?.images?.[0]?.url ||
+                          item?.image ||
+                          "/fallback-image.png"
+                        }
+                        alt={item.title || "Project cover"}
+                        className="w-full sm:w-36 h-36 object-cover rounded-xl shadow-md group-hover/image:shadow-lg transition-all duration-300 group-hover/image:scale-105"
+                        onError={(e) => {
+                          e.target.src = "/fallback-image.png";
+                        }}
+                      />
+                      {item.featured && (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                          ⭐ Featured
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          {item.title}
+                        </h4>
+                        {item.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {item.role && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            Role: {item.role}
+                          </span>
+                        )}
+                        {item.duration && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            Duration: {item.duration}
+                          </span>
+                        )}
+                        {item.category?.title && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            {item.category.title}
+                          </span>
+                        )}
+                        {item.client?.name && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            {item.client.type}: {item.client.name}
+                          </span>
+                        )}
+                      </div>
+                      {item.updatedAt && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          Last updated:{" "}
+                          {new Date(item.updatedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <span
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-sm flex items-center gap-1.5 ${getStatusColor(
+                          item.status
+                        )}`}
+                      >
+                        {getIconComponent(getStatusIcon(item.status))({
+                          size: 12,
+                        })}
+                        {item.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item, activeTab)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                        >
+                          <IconComponent size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(item._id, activeTab, item.title)
+                          }
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                        <a
+                          href={`/projects/${
+                            item.slug || slugGenerator(item.title)
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-xl"
+                          title="View Project"
+                        >
+                          {getIconComponent("FaExternalLinkAlt")({
+                            size: 14,
+                          })}
+                        </a>
+                      </div>
+                    </div>
                   </div>
+                );
+              }
+              // BLOGS CARD
+              if (activeTab === "blogs") {
+                // Skip rendering if blog data is incomplete
+                if (!item || !item._id || !item.title) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 dark:border-gray-600/40 flex flex-col sm:flex-row gap-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  >
+                    <div className="relative group/image">
+                      <img
+                        src={item.coverImage?.url || "/fallback-image.png"}
+                        alt={item.title || "Blog cover"}
+                        className="w-full sm:w-36 h-36 object-cover rounded-xl shadow-md group-hover/image:shadow-lg transition-all duration-300 group-hover/image:scale-105"
+                        onError={(e) => {
+                          e.target.src = "/fallback-image.png";
+                        }}
+                      />
+                      {item.featured && (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                          ⭐ Featured
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          {item.title}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                          {item.excerpt}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {item.category && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            📂 {item.category}
+                          </span>
+                        )}
+                        {Array.isArray(item.tags) && item.tags.length > 0 && (
+                          <>
+                            {item.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2.5 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-medium rounded-full shadow-sm"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                            {item.tags.length > 3 && (
+                              <span className="px-2.5 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-full shadow-sm">
+                                +{item.tags.length - 3} more
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Last updated:{" "}
+                        {new Date(item.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <span
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-sm flex items-center gap-1.5 ${getStatusColor(
+                          item.status
+                        )}`}
+                      >
+                        {getIconComponent(getStatusIcon(item.status))({
+                          size: 12,
+                        })}
+                        {item.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item, activeTab)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                        >
+                          <IconComponent size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(item._id, activeTab, item.title)
+                          }
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                        <a
+                          href={`/blogs/${
+                            item.slug || slugGenerator(item.title)
+                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-900/30 rounded-xl"
+                          title="View Post"
+                        >
+                          {getIconComponent("FaExternalLinkAlt")({
+                            size: 14,
+                          })}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              // SERVICES CARD
+              if (activeTab === "services") {
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 dark:border-gray-600/40 flex flex-col sm:flex-row gap-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  >
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          {item.title}
+                        </h4>
+                        {item.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {item.category && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            Category: {item.category}
+                          </span>
+                        )}
+                        {item.pricing && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            Price: {item.pricing}
+                          </span>
+                        )}
+                        {item.projectCount !== undefined && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            Projects: {item.projectCount}
+                          </span>
+                        )}
+                        {item.features && item.features.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {cleanFeaturesForDisplay(item.features)
+                              .slice(0, 3)
+                              .map((feature, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs rounded-full"
+                                >
+                                  {feature}
+                                </span>
+                              ))}
+                            {cleanFeaturesForDisplay(item.features).length >
+                              3 && (
+                              <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs rounded-full">
+                                +
+                                {cleanFeaturesForDisplay(item.features).length -
+                                  3}{" "}
+                                more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <span
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-sm flex items-center gap-1.5 ${getStatusColor(
+                          item.status
+                        )}`}
+                      >
+                        {getIconComponent(getStatusIcon(item.status))({
+                          size: 12,
+                        })}
+                        {item.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item, activeTab)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                        >
+                          <IconComponent size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(
+                              item._id,
+                              activeTab,
+                              item.title || item.name
+                            )
+                          }
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              // EXPERIENCES CARD
+              if (activeTab === "experiences") {
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 dark:border-gray-600/40 flex flex-col sm:flex-row gap-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  >
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          {item.company}
+                        </h4>
+                        {item.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {item.role && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            {item.role}
+                          </span>
+                        )}
+                        {item.period && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            {item.period.from} - {item.period.to}
+                          </span>
+                        )}
+                        {item.duration && (
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                            {item.duration}
+                          </span>
+                        )}
+                        {Array.isArray(item.skills) &&
+                          item.skills.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {item.skills.slice(0, 3).map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200 text-xs rounded-full"
+                                >
+                                  {typeof skill === "string"
+                                    ? skill
+                                    : skill.name}
+                                </span>
+                              ))}
+                              {item.skills.length > 3 && (
+                                <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs rounded-full">
+                                  +{item.skills.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <span
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-sm flex items-center gap-1.5 ${getStatusColor(
+                          item.status
+                        )}`}
+                      >
+                        {getIconComponent(getStatusIcon(item.status))({
+                          size: 12,
+                        })}
+                        {item.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item, activeTab)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                        >
+                          <IconComponent size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(item._id, activeTab, item.company)
+                          }
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              // TESTIMONIALS CARD
+              if (activeTab === "testimonials") {
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 dark:border-gray-600/40 flex flex-col sm:flex-row gap-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+                  >
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        {item.image?.url && (
+                          <img
+                            src={item.image.url}
+                            alt={item.name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          />
+                        )}
+                        <div>
+                          <h4 className="font-bold text-gray-900 dark:text-white text-xl">
+                            {item.name}
+                          </h4>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {item.role && (
+                              <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                                {item.role}
+                              </span>
+                            )}
+                            {item.company && (
+                              <span className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full shadow-sm">
+                                {item.company}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {item.quote && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 italic">
+                          "{item.quote}"
+                        </p>
+                      )}
+                      {item.rating && (
+                        <div className="flex items-center gap-1 mt-2">
+                          {[...Array(item.rating)].map((_, i) => (
+                            <span key={i} className="text-yellow-400">
+                              ★
+                            </span>
+                          ))}
+                          <span className="text-sm text-gray-500 ml-1">
+                            ({item.rating}/5)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                      <span
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide shadow-sm flex items-center gap-1.5 ${getStatusColor(
+                          item.status
+                        )}`}
+                      >
+                        {getIconComponent(getStatusIcon(item.status))({
+                          size: 12,
+                        })}
+                        {item.status}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(item, activeTab)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl"
+                        >
+                          <IconComponent size={14} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(item._id, activeTab, item.name)
+                          }
+                          className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              // CONSULTATIONS handled in separate component, skip here
+              // ... fallback for other tabs ...
+              return null;
+            })}
+          </div>
+        )}
+
+        {activeTab !== "consultations" &&
+          activeTab !== "techstack" &&
+          (() => {
+            const totalItems = filteredData.length;
+            const totalPages = Math.max(
+              1,
+              Math.ceil(totalItems / itemsPerPage)
+            );
+            return (
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {Math.min(currentPage, totalPages)} of {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(idx + 1)}
+                      className={`px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 ${
+                        currentPage === idx + 1
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : ""
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-gray-300 dark:border-gray-600"
+                  >
+                    <option value={5}>5 / page</option>
+                    <option value={10}>10 / page</option>
+                    <option value={20}>20 / page</option>
+                    <option value={50}>50 / page</option>
+                  </select>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            );
+          })()}
       </div>
     );
   };
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/30 p-4 sm:p-6 mx-4 sm:mx-0">
-      <div className="flex flex-col">
-        {/* Header with mobile menu toggle */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            Works Management
-          </h2>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <FaBars size={20} />
-          </button>
-        </div>
+    <>
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/30 p-4 sm:p-6 mx-0">
+        <div className="flex flex-col">
+          {/* Header */}
+          <div className="flex items-center mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              Works Management
+            </h2>
+          </div>
 
-        {/* Mobile/Tablet Tab Navigation */}
-        <div className="lg:hidden mb-6">
-          {/* Mobile dropdown menu */}
-          {isMobileMenuOpen && (
-            <div className="space-y-2 mb-4 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
-              {tabs.map((tab) => (
-                <motion.button
-                  key={tab.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                  }`}
-                >
-                  <tab.icon size={20} />
-                  <span className="font-medium">{tab.label}</span>
-                </motion.button>
-              ))}
+          {/* Mobile/Tablet Tab Navigation */}
+          <div className="lg:hidden mb-6">
+            {/* Mobile dropdown menu */}
+            {isMobileMenuOpen && (
+              <div className="space-y-2 mb-4 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+                {tabs.map((tab) => {
+                  const IconComponent = getIconComponent(tab.icon);
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        activeTab === tab.id
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                      }`}
+                    >
+                      <IconComponent size={20} />
+                      <span className="font-medium">{tab.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Horizontal scroll tabs for tablets */}
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+              {tabs.map((tab) => {
+                const IconComponent = getIconComponent(tab.icon);
+                return (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 bg-gray-50 dark:bg-gray-700/30"
+                    }`}
+                  >
+                    <IconComponent size={16} />
+                    <span className="text-sm font-medium">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
             </div>
-          )}
+          </div>
 
-          {/* Horizontal scroll tabs for tablets */}
-          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-            {tabs.map((tab) => (
-              <motion.button
-                key={tab.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 bg-gray-50 dark:bg-gray-700/30"
-                }`}
+          {/* Desktop Layout */}
+          <div className="hidden lg:flex gap-6">
+            {/* Sidebar Tabs */}
+            <div className="w-64 flex-shrink-0">
+              <div className="space-y-2">
+                {tabs.map((tab) => {
+                  const IconComponent = getIconComponent(tab.icon);
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        activeTab === tab.id
+                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                      }`}
+                    >
+                      <IconComponent size={20} />
+                      <span className="font-medium">{tab.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <tab.icon size={16} />
-                <span className="text-sm font-medium">{tab.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex gap-6">
-          {/* Sidebar Tabs */}
-          <div className="w-64 flex-shrink-0">
-            <div className="space-y-2">
-              {tabs.map((tab) => (
-                <motion.button
-                  key={tab.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                  }`}
-                >
-                  <tab.icon size={20} />
-                  <span className="font-medium">{tab.label}</span>
-                </motion.button>
-              ))}
+                {renderTabContent()}
+              </motion.div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1">
+          {/* Mobile/Tablet Content */}
+          <div className="lg:hidden">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 20 }}
@@ -818,23 +1271,74 @@ const WorksManager = () => {
             </motion.div>
           </div>
         </div>
-
-        {/* Mobile/Tablet Content */}
-        <div className="lg:hidden">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderTabContent()}
-          </motion.div>
-        </div>
       </div>
 
-      {/* Form Modal */}
-      {isFormOpen && renderForm()}
-    </div>
+      {/* Form Modals - Moved outside the main container */}
+      {isFormOpen && activeTab === "projects" && (
+        <ProjectForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          project={editingItem}
+          onSave={handleProjectSave}
+          techStacks={techStacks}
+          services={services}
+        />
+      )}
+      {isFormOpen && activeTab === "blogs" && (
+        <BlogForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          blog={editingItem}
+          onSave={handleBlogSave}
+        />
+      )}
+      {isFormOpen && activeTab === "services" && (
+        <ServiceForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          service={editingItem}
+          onSave={handleServiceSave}
+        />
+      )}
+      {isFormOpen && activeTab === "experiences" && (
+        <ExperiencesForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          experience={editingItem}
+          onSave={handleExperienceSave}
+          techStacks={techStacks}
+        />
+      )}
+      {isFormOpen && activeTab === "testimonials" && (
+        <TestimonialForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          testimonial={editingItem}
+          onSave={handleTestimonialSave}
+        />
+      )}
+      {isFormOpen && activeTab === "techstack" && (
+        <TechStackForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          tech={editingItem}
+          onSave={handleTechStackSave}
+          techStacks={techStacks}
+        />
+      )}
+
+      {/* Confirm Dialog - Moved outside the main container */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type="danger"
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+    </>
   );
 };
 

@@ -1,11 +1,11 @@
 "use client";
 
+import { LoadingState } from "@/components/states";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Analytics from "./components/Analytics";
-import BlogManager from "./components/BlogManager";
-import ConsultationScheduleManager from "./components/ConsultationScheduleManager";
 import { DashboardSidebar } from "./components/DashboardSidebar";
 import MessagesPanel from "./components/MessagesPanel";
 import Overview from "./components/Overview";
@@ -16,9 +16,9 @@ import WorksManager from "./components/WorksManager";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // ConfirmDialog state
   const [showConfirm, setShowConfirm] = useState(false);
@@ -34,20 +34,13 @@ const Page = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const loginStatus = localStorage.getItem("isLoggedIn");
-      const isAuthenticated = loginStatus === "true";
-
-      setIsLoggedIn(isAuthenticated);
+    if (!authLoading) {
       setIsLoading(false);
-
       if (!isAuthenticated) {
         router.push("/");
       }
-    };
-
-    checkAuth();
-  }, [router]);
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   // Function to open dialog from any child
   const openConfirmDialog = (config) => {
@@ -55,29 +48,12 @@ const Page = () => {
     setShowConfirm(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Loading Dashboard...
-          </p>
-        </div>
-      </div>
-    );
+  if (isLoading || authLoading) {
+    return <LoadingState message="Loading Dashboard..." />;
   }
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            Redirecting to home...
-          </p>
-        </div>
-      </div>
-    );
+  if (!isAuthenticated) {
+    return <LoadingState message="Redirecting to home..." />;
   }
 
   const renderContent = () => {
@@ -88,12 +64,6 @@ const Page = () => {
         return <Analytics />;
       case "works":
         return <WorksManager openConfirmDialog={openConfirmDialog} />;
-      case "blogs":
-        return <BlogManager openConfirmDialog={openConfirmDialog} />;
-      case "consultations":
-        return (
-          <ConsultationScheduleManager openConfirmDialog={openConfirmDialog} />
-        );
       case "messages":
         return <MessagesPanel openConfirmDialog={openConfirmDialog} />;
       case "resume":
