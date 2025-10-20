@@ -142,6 +142,7 @@ const Hero = ({
           {fullName}
         </motion.h1>
 
+        {/* Dynamic Tagline Section with Typewriter Effect */}
         <motion.div
           variants={itemVariants}
           className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-6 font-medium min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3.5rem] flex items-center justify-center"
