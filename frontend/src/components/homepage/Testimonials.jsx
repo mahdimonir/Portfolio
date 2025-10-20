@@ -1,6 +1,5 @@
 "use client";
 
-import { testimonials } from "@/data/testimonials";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import {
@@ -10,12 +9,12 @@ import {
   FaStar,
 } from "react-icons/fa";
 
-const Testimonials = () => {
+const Testimonials = ({ testimonials }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || testimonials.length === 0) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % testimonials.length);
@@ -41,8 +40,10 @@ const Testimonials = () => {
     setIsAutoPlaying(false);
   };
 
+  if (testimonials.length === 0) return null; // Skip rendering if no testimonials
+
   return (
-    <section className="py-12 md:py-20 px-4 section-gradient-bg">
+    <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="text-center mb-12"
@@ -81,16 +82,18 @@ const Testimonials = () => {
             >
               <div className="w-20 h-20 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-lg">
                 <img
-                  src={testimonials[currentIndex].image}
+                  src={testimonials[currentIndex].image.url}
                   alt={testimonials[currentIndex].name}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <div className="flex justify-center gap-1 mb-6">
-                {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
-                  <FaStar key={i} className="text-yellow-400" size={16} />
-                ))}
+                {[...Array(testimonials[currentIndex].rating || 5)].map(
+                  (_, i) => (
+                    <FaStar key={i} className="text-yellow-400" size={16} />
+                  )
+                )}
               </div>
 
               <blockquote className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-6 italic">
@@ -114,6 +117,7 @@ const Testimonials = () => {
           <button
             onClick={prevTestimonial}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            disabled={testimonials.length <= 1}
           >
             <FaChevronLeft size={20} />
           </button>
@@ -121,6 +125,7 @@ const Testimonials = () => {
           <button
             onClick={nextTestimonial}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            disabled={testimonials.length <= 1}
           >
             <FaChevronRight size={20} />
           </button>

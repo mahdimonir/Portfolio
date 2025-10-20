@@ -1,75 +1,60 @@
 "use client";
 
-import { experiences } from "@/data/experiences";
+import { getBackgroundGradient, getDynamicGradient } from "@/hooks/gradient";
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import { FaBriefcase } from "react-icons/fa";
 
-const ModernExperience = () => {
+const Experience = ({ experiences }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [activeIndex, setActiveIndex] = useState(0);
+  const isInView = useInView(ref, { once: true });
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
+      transition: { staggerChildren: 0.2 },
     },
   };
 
   const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 50,
-      scale: 0.8,
-    },
+    hidden: { y: 50, opacity: 0 },
     visible: {
-      opacity: 1,
       y: 0,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-      },
+      opacity: 1,
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
   return (
     <section ref={ref} className="min-h-screen section-gradient-bg py-20 px-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: -30 }}
-          transition={{ duration: 0.6 }}
           className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.6 }}
         >
-          <motion.span
-            className="inline-block px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-6 border border-blue-200 dark:border-blue-800"
+          <motion.div
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-6"
             initial={{ scale: 0 }}
-            animate={isInView ? { scale: 1 } : { scale: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            whileInView={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            viewport={{ once: true }}
           >
-            ✨ Career Journey
-          </motion.span>
+            <FaBriefcase />
+            Professional Experience
+          </motion.div>
 
-          <h2 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-white dark:via-blue-400 dark:to-purple-400">
-              Experience
-            </span>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            My Journey
           </h2>
-
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            A timeline of growth, innovation, and impact across different
-            companies and technologies
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            A track record of delivering impactful solutions across various
+            roles
           </p>
         </motion.div>
 
-        {/* Experience Timeline */}
         <div className="relative">
           {/* Timeline Line */}
           <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 transform -translate-x-1/2 hidden md:block" />
@@ -82,12 +67,11 @@ const ModernExperience = () => {
           >
             {experiences.map((exp, index) => (
               <motion.div
-                key={exp.id}
+                key={exp._id || exp.id || index}
                 variants={itemVariants}
                 className={`relative flex flex-col md:flex-row items-center ${
                   index % 2 === 0 ? "md:flex-row-reverse" : ""
                 }`}
-                onHoverStart={() => setActiveIndex(index)}
               >
                 {/* Timeline Dot */}
                 <div className="absolute left-8 md:left-1/2 w-4 h-4 bg-white dark:bg-gray-800 border-4 border-blue-500 rounded-full transform -translate-x-1/2 z-10 hidden md:block" />
@@ -101,12 +85,16 @@ const ModernExperience = () => {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <div
-                    className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${exp.bgColor} backdrop-blur-sm border border-white/20 dark:border-gray-700/30 p-8 shadow-xl`}
+                    className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${getBackgroundGradient(
+                      index
+                    )} backdrop-blur-sm border border-white/20 dark:border-gray-700/30 p-8 shadow-xl`}
                   >
                     {/* Animated Background Pattern */}
                     <div className="absolute inset-0 opacity-30">
                       <div
-                        className={`absolute inset-0 bg-gradient-to-r ${exp.color} opacity-10`}
+                        className={`absolute inset-0 bg-gradient-to-r ${getDynamicGradient(
+                          index
+                        )} opacity-10`}
                       />
                       <motion.div
                         className="absolute inset-0"
@@ -131,19 +119,27 @@ const ModernExperience = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                            {exp.role}
+                            {exp.role || "Unknown Role"}
                           </h3>
                           <p
-                            className={`font-semibold bg-gradient-to-r ${exp.color} bg-clip-text text-transparent`}
+                            className={`font-semibold bg-gradient-to-r ${getDynamicGradient(
+                              index
+                            )} bg-clip-text text-transparent`}
                           >
-                            {exp.company}
+                            {exp.company || "Unknown Company"}
                           </p>
                         </div>
                         <motion.div
-                          className={`px-3 py-1 bg-gradient-to-r ${exp.color} text-white text-xs font-semibold rounded-full`}
+                          className={`px-3 py-1 bg-gradient-to-r ${getDynamicGradient(
+                            index
+                          )} text-white text-xs font-semibold rounded-full`}
                           whileHover={{ scale: 1.1 }}
                         >
-                          {exp.period}
+                          {exp.period?.from
+                            ? `${exp.period.from} - ${
+                                exp.period.to || "Present"
+                              }`
+                            : exp.period || "Unknown Period"}
                         </motion.div>
                       </div>
 
@@ -160,12 +156,12 @@ const ModernExperience = () => {
                             clipRule="evenodd"
                           />
                         </svg>
-                        {exp.location}
+                        {exp.location || "Unknown Location"}
                       </p>
 
                       {/* Description */}
                       <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                        {exp.description}
+                        {exp.description || "No description available"}
                       </p>
 
                       {/* Skills */}
@@ -174,7 +170,7 @@ const ModernExperience = () => {
                           Technologies
                         </h4>
                         <div className="flex flex-wrap gap-2">
-                          {exp.skills.map((skill, idx) => (
+                          {exp.skills?.map((skill, idx) => (
                             <motion.span
                               key={idx}
                               className="px-3 py-1 bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg backdrop-blur-sm border border-white/30 dark:border-gray-600/30"
@@ -184,7 +180,7 @@ const ModernExperience = () => {
                               }}
                               transition={{ type: "spring", stiffness: 400 }}
                             >
-                              {skill}
+                              {skill.name || skill}
                             </motion.span>
                           ))}
                         </div>
@@ -196,7 +192,7 @@ const ModernExperience = () => {
                           Key Achievements
                         </h4>
                         <div className="space-y-2">
-                          {exp.achievements.map((achievement, idx) => (
+                          {exp.achievements?.map((achievement, idx) => (
                             <motion.div
                               key={idx}
                               className="flex items-center text-sm text-gray-600 dark:text-gray-400"
@@ -205,7 +201,9 @@ const ModernExperience = () => {
                               transition={{ delay: idx * 0.1 }}
                             >
                               <div
-                                className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${exp.color} mr-3 flex-shrink-0`}
+                                className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${getDynamicGradient(
+                                  index
+                                )} mr-3 flex-shrink-0`}
                               />
                               {achievement}
                             </motion.div>
@@ -227,4 +225,4 @@ const ModernExperience = () => {
   );
 };
 
-export default ModernExperience;
+export default Experience;

@@ -1,117 +1,71 @@
-"use client";
-
-import { getIconComponent } from "@/components/global/getIconComponent";
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import axiosInstance from "@/lib/axios";
-import { motion } from "framer-motion";
+import TechList from "@/components/projects/TechList";
+import {
+  MotionA,
+  MotionDiv,
+  containerVariants,
+  itemVariants,
+} from "@/components/ui/motion";
+import serverAxios from "@/lib/serverAxios";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   FaArrowLeft,
   FaExternalLinkAlt,
   FaGithub,
   FaProjectDiagram,
 } from "react-icons/fa";
-import { toast } from "sonner";
 
-const Page = () => {
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Define the revalidation time (24 hours)
+export const revalidate = 86400;
 
-  // Fetch projects from /projects on mount
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.get("/projects");
-        const apiProjects = response.data.data.map((project) => ({
-          ...project,
-          id: project._id,
-          tech: Array.isArray(project.tech)
-            ? project.tech.map((techItem) => ({
-                name: techItem.name || "Unknown",
-                icon: getIconComponent(techItem.icon || "FaQuestionCircle"),
-                color: techItem.color || "text-gray-500",
-              }))
-            : [],
-          category: project.category?.category || "Uncategorized",
-          image: project.image || "/fallback-image.png",
-          images: Array.isArray(project.images)
-            ? project.images.map((img) => img.url)
-            : [],
-        }));
-        setProjects(apiProjects);
-      } catch (error) {
-        setError(error.response?.data?.message || "Failed to fetch projects");
-        toast.error(
-          error.response?.data?.message || "Failed to fetch projects"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProjects();
-  }, []);
+// Using pre-defined animation variants from the motion component
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 50, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-      },
-    },
-  };
-
-  if (isLoading) {
-    return (
-      <div className="py-20">
-        <LoadingState message="Loading Projects..." />
-      </div>
-    );
+async function getProjects() {
+  try {
+    const response = await serverAxios.get("/projects");
+    return response.data.data.map((project) => ({
+      ...project,
+      id: project._id,
+      tech: Array.isArray(project.tech)
+        ? project.tech.map((techItem) => ({
+            name: techItem.name || "Unknown",
+            icon: techItem.icon || "FaQuestionCircle",
+            color: techItem.color || "text-gray-500",
+          }))
+        : [],
+      category: project.category?.category || "Uncategorized",
+      image: project.image || "/fallback-image.png",
+      images: Array.isArray(project.images)
+        ? project.images.map((img) => img.url)
+        : [],
+    }));
+  } catch (error) {
+    console.error("Failed to fetch projects:", error);
+    return [];
   }
+}
 
-  if (error) {
-    return (
-      <div className="py-20">
-        <ErrorState
-          title="Failed to load Projects"
-          description="There was a problem connecting to our servers. Please check your connection and try again."
-          onRetry={() => window.location.reload()}
-          error={error}
-        />
-      </div>
-    );
-  }
+const Page = async () => {
+  const projects = await getProjects();
 
   if (projects.length === 0) {
     return (
       <div className="py-20">
-        <EmptyState
-          icon={FaProjectDiagram}
-          title="No projects found"
-          description="Looks like there are no projects available at the moment. Check back later!"
-          action={
-            <Link
-              href="/"
-              className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
-            >
-              Go back home
-            </Link>
-          }
-        />
+        <div className="flex flex-col items-center justify-center text-center">
+          <FaProjectDiagram className="text-5xl text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+            No projects found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Looks like there are no projects available at the moment. Check back
+            later!
+          </p>
+          <Link
+            href="/"
+            className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
+          >
+            Go back home
+          </Link>
+        </div>
       </div>
     );
   }
@@ -121,7 +75,7 @@ const Page = () => {
       <div className="relative">
         <main className="pb-20 pt-8">
           <div className="max-w-7xl mx-auto px-4">
-            <motion.div
+            <MotionDiv
               className="mb-12"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -142,16 +96,16 @@ const Page = () => {
                 A collection of projects I've worked on, showcasing different
                 technologies and problem-solving approaches.
               </p>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.div
+            <MotionDiv
               className="grid md:grid-cols-2 xl:grid-cols-3 gap-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               {projects.map((project) => (
-                <motion.div
+                <MotionDiv
                   key={project.id}
                   variants={itemVariants}
                   className="group relative"
@@ -173,7 +127,7 @@ const Page = () => {
 
                       <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         {project.github && (
-                          <motion.a
+                          <MotionA
                             href={project.github}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -182,9 +136,9 @@ const Page = () => {
                             whileTap={{ scale: 0.95 }}
                           >
                             <FaGithub size={16} />
-                          </motion.a>
+                          </MotionA>
                         )}
-                        <motion.a
+                        <MotionA
                           href={project.demo}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -193,7 +147,7 @@ const Page = () => {
                           whileTap={{ scale: 0.95 }}
                         >
                           <FaExternalLinkAlt size={16} />
-                        </motion.a>
+                        </MotionA>
                       </div>
                     </div>
 
@@ -205,45 +159,25 @@ const Page = () => {
                         {project.description}
                       </p>
 
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {Array.isArray(project.tech) &&
-                        project.tech.length > 0 ? (
-                          project.tech.map((tech, index) => (
-                            <div
-                              key={index}
-                              className="p-2 bg-gray-100/80 dark:bg-gray-700/50 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                            >
-                              {tech.icon ? (
-                                <tech.icon size={16} className={tech.color} />
-                              ) : (
-                                <FaGithub size={16} className="text-gray-500" />
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-red-500 text-sm">
-                            No technologies listed
-                          </p>
-                        )}
-                      </div>
+                      <TechList techs={project.tech} cardId={project.id} />
 
                       <Link
                         href={`/projects/${project.slug}`}
                         className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
                       >
                         View Details
-                        <motion.div
+                        <MotionDiv
                           whileHover={{ x: 4 }}
                           transition={{ duration: 0.2 }}
                         >
                           →
-                        </motion.div>
+                        </MotionDiv>
                       </Link>
                     </div>
                   </div>
-                </motion.div>
+                </MotionDiv>
               ))}
-            </motion.div>
+            </MotionDiv>
           </div>
         </main>
       </div>

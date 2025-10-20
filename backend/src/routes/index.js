@@ -19,7 +19,7 @@ router.get("/health", (req, res) => {
 // API routes
 router.use("/auth", authRoutes);
 router.use("/me", profileRoutes);
-router.use("/techstack", techStackRoutes);
+router.use("/techstacks", techStackRoutes);
 router.use("/projects", projectRoutes);
 router.use("/blogs", blogRoutes);
 router.use("/testimonials", testimonialRoutes);

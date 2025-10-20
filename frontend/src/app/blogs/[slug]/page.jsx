@@ -1,5 +1,5 @@
-import axios from "@/lib/axios";
-import { motion } from "framer-motion";
+import serverAxios from "@/lib/serverAxios";
+import { MotionDiv, MotionHeader } from "@/components/ui/motion";
 import Link from "next/link";
 import {
   FaArrowLeft,
@@ -10,9 +10,27 @@ import {
 } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 
+// Define the revalidation time (24 hours)
+export const revalidate = 86400;
+
+// Generate static params for all blog slugs
+export async function generateStaticParams() {
+  try {
+    const response = await serverAxios.get('/blogs');
+    const blogs = response.data.data || [];
+    
+    return blogs.map((blog) => ({
+      slug: blog.slug,
+    }));
+  } catch (error) {
+    console.error('Error generating static params for blogs:', error);
+    return [];
+  }
+}
+
 const getBlog = async (slug) => {
   try {
-    const response = await axios.get(`/blogs/slug/${slug}`);
+    const response = await serverAxios.get(`/blogs/slug/${slug}`);
     return response.data.data;
   } catch (error) {
     // In a real app, you might want to log this error to a service
@@ -49,7 +67,7 @@ const BlogPage = async ({ params }) => {
       <div className="relative">
         <main className="pb-20 pt-8">
           <article className="max-w-4xl mx-auto px-4">
-            <motion.div
+            <MotionDiv
               className="mb-8"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -62,9 +80,9 @@ const BlogPage = async ({ params }) => {
                 <FaArrowLeft />
                 Back to Blog
               </Link>
-            </motion.div>
+            </MotionDiv>
 
-            <motion.header
+            <MotionHeader
               className="mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -121,10 +139,10 @@ const BlogPage = async ({ params }) => {
                   </span>
                 ))}
               </div>
-            </motion.header>
+            </MotionHeader>
 
             {blog.image?.url && (
-              <motion.div
+              <MotionDiv
                 className="mb-12"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -135,10 +153,10 @@ const BlogPage = async ({ params }) => {
                   alt={blog.title}
                   className="w-full h-64 md:h-96 object-cover rounded-3xl shadow-2xl"
                 />
-              </motion.div>
+              </MotionDiv>
             )}
 
-            <motion.div
+            <MotionDiv
               className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 md:p-12 shadow-lg border border-white/20 dark:border-gray-700/30 mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -147,10 +165,10 @@ const BlogPage = async ({ params }) => {
               <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:text-gray-800 dark:prose-headings:text-white prose-a:text-blue-600 hover:prose-a:text-blue-500">
                 <ReactMarkdown>{blog.content}</ReactMarkdown>
               </div>
-            </motion.div>
+            </MotionDiv>
 
             {blog.author && (
-              <motion.div
+              <MotionDiv
                 className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 dark:border-gray-700/30"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -174,7 +192,7 @@ const BlogPage = async ({ params }) => {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
           </article>
         </main>
@@ -183,4 +201,4 @@ const BlogPage = async ({ params }) => {
   );
 };
 
-export default BlogPage; 
+export default BlogPage;

@@ -1,6 +1,5 @@
 "use client";
 
-import { User } from "@/data/user";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -12,8 +11,15 @@ import {
   FaTwitter,
 } from "react-icons/fa";
 
-const Hero = () => {
-  // Dynamic tagline state
+const Hero = ({
+  fullName,
+  tagLines,
+  about,
+  avatar,
+  socialLinks,
+  resume,
+  contact,
+}) => {
   const [currentTaglineIndex, setCurrentTaglineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
@@ -21,16 +27,15 @@ const Hero = () => {
   const [resumeLoading, setResumeLoading] = useState(false);
 
   useEffect(() => {
-    const currentTagline = User.tagLines[currentTaglineIndex];
-    const typingSpeed = 100; // Speed of typing
-    const deletingSpeed = 50; // Speed of deleting
-    const pauseBeforeDelete = 2000; // Pause before starting to delete
-    const pauseBeforeNext = 500; // Pause before typing next tagline
+    const currentTagline = tagLines[currentTaglineIndex] || "";
+    const typingSpeed = 100;
+    const deletingSpeed = 50;
+    const pauseBeforeDelete = 2000;
+    const pauseBeforeNext = 500;
 
     let timeout;
 
     if (isTyping && !isDeleting) {
-      // Typing phase
       if (displayedText.length < currentTagline.length) {
         timeout = setTimeout(() => {
           setDisplayedText(
@@ -38,14 +43,12 @@ const Hero = () => {
           );
         }, typingSpeed);
       } else {
-        // Finished typing, pause then start deleting
         timeout = setTimeout(() => {
           setIsDeleting(true);
           setIsTyping(false);
         }, pauseBeforeDelete);
       }
     } else if (isDeleting && !isTyping) {
-      // Deleting phase
       if (displayedText.length > 0) {
         timeout = setTimeout(() => {
           setDisplayedText(
@@ -53,9 +56,8 @@ const Hero = () => {
           );
         }, deletingSpeed);
       } else {
-        // Finished deleting, move to next tagline
         timeout = setTimeout(() => {
-          setCurrentTaglineIndex((prev) => (prev + 1) % User.tagLines.length);
+          setCurrentTaglineIndex((prev) => (prev + 1) % tagLines.length);
           setIsDeleting(false);
           setIsTyping(true);
         }, pauseBeforeNext);
@@ -63,20 +65,16 @@ const Hero = () => {
     }
 
     return () => clearTimeout(timeout);
-  }, [displayedText, isTyping, isDeleting, currentTaglineIndex]);
+  }, [displayedText, isTyping, isDeleting, currentTaglineIndex, tagLines]);
 
   const handleResumeClick = () => {
     setResumeLoading(true);
-
-    // Track resume views (Google Analytics)
     if (typeof gtag !== "undefined") {
       gtag("event", "resume_view", {
         event_category: "engagement",
         event_label: "hero_section",
       });
     }
-
-    // Reset loading state after a short delay
     setTimeout(() => setResumeLoading(false), 2000);
   };
 
@@ -112,21 +110,17 @@ const Hero = () => {
       >
         <motion.div variants={itemVariants} className="mb-8">
           <div className="relative inline-block">
-            {/* Avatar container with fixed positioning */}
             <div className="relative w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 mx-auto">
-              {/* Main avatar */}
               <div className="w-full h-full rounded-full overflow-hidden border-4 border-white/70 dark:border-gray-700/70 shadow-2xl relative z-20 bg-white dark:bg-gray-800">
                 <Image
-                  src={User.avatar}
-                  alt={`${User.fullName}'s profile picture`}
+                  src={avatar}
+                  alt={`${fullName}'s profile picture`}
                   width={160}
                   height={160}
                   className="w-full h-full object-cover"
                   priority
                 />
               </div>
-
-              {/* Background glow - properly positioned */}
               <motion.div
                 className="absolute -inset-6 rounded-full opacity-30 z-10"
                 style={{
@@ -134,14 +128,8 @@ const Hero = () => {
                     "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6)",
                   filter: "blur(20px)",
                 }}
-                animate={{
-                  rotate: [0, 360],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
               />
             </div>
           </div>
@@ -151,10 +139,9 @@ const Hero = () => {
           variants={itemVariants}
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
         >
-          {User.fullName}
+          {fullName}
         </motion.h1>
 
-        {/* Dynamic Tagline Section with Typewriter Effect */}
         <motion.div
           variants={itemVariants}
           className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-6 font-medium min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3.5rem] flex items-center justify-center"
@@ -179,10 +166,9 @@ const Hero = () => {
           variants={itemVariants}
           className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed px-4"
         >
-          {User.about}
+          {about}
         </motion.p>
 
-        {/* Social Links */}
         <motion.div
           variants={itemVariants}
           className="flex justify-center flex-wrap gap-4 mb-8"
@@ -190,25 +176,25 @@ const Hero = () => {
           {[
             {
               icon: FaGithub,
-              href: User.socialLinks.github,
+              href: socialLinks.github,
               label: "GitHub",
               color: "hover:text-gray-900 dark:hover:text-white",
             },
             {
               icon: FaLinkedin,
-              href: User.socialLinks.linkedin,
+              href: socialLinks.linkedin,
               label: "LinkedIn",
               color: "hover:text-blue-600",
             },
             {
               icon: FaTwitter,
-              href: User.socialLinks.twitter,
+              href: socialLinks.twitter,
               label: "Twitter",
               color: "hover:text-blue-400",
             },
             {
               icon: FaEnvelope,
-              href: `mailto:${User.contact.email}`,
+              href: `mailto:${contact.email}`,
               label: "Email",
               color: "hover:text-red-500",
             },
@@ -228,7 +214,6 @@ const Hero = () => {
           ))}
         </motion.div>
 
-        {/* CTA Buttons */}
         <motion.div
           variants={itemVariants}
           className="flex flex-col sm:flex-row gap-4 justify-center px-4"
@@ -244,7 +229,7 @@ const Hero = () => {
           </motion.a>
 
           <motion.a
-            href={User.resume}
+            href={resume}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleResumeClick}

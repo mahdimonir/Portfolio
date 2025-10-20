@@ -1,7 +1,7 @@
-"use client"; // Required for useEffect and Framer Motion
+"use client";
 
 import { useTheme } from "@/components/ThemeProvider";
-import { motion } from "framer-motion";
+import { MotionDiv } from "@/components/ui/motion";
 import { useEffect, useRef, useState } from "react";
 import GitHubCalendar from "react-github-calendar";
 import { Tooltip as ReactTooltip } from "react-tooltip";
@@ -11,38 +11,19 @@ const lastYear = new Date();
 lastYear.setFullYear(today.getFullYear() - 1);
 const formatDate = (d) => d.toISOString().split("T")[0];
 
-// Generate realistic dummy contributions
-const generateRealisticContributions = (start, end) => {
-  const date = new Date(start);
-  const endDate = new Date(end);
-  const data = [];
-  while (date <= endDate) {
-    const rand = Math.random();
-    let count = 0;
-    if (rand > 0.8) count = Math.floor(Math.random() * 10) + 1;
-    else if (rand > 0.5) count = Math.floor(Math.random() * 4);
-    data.push({ date: formatDate(date), count });
-    date.setDate(date.getDate() + 1);
-  }
-  return data;
-};
-
-const fallbackContributions = generateRealisticContributions(
-  formatDate(lastYear),
-  formatDate(today)
-);
-
-const GitContribution = () => {
+const GitContribution = ({ githubData }) => {
   const { theme } = useTheme();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalContributions: 0,
-    currentStreak: 0,
-    maxStreak: 0,
-    thisMonth: 0,
-  });
-  const [contributions, setContributions] = useState(fallbackContributions);
   const calendarRef = useRef(null);
+
+  // Use the server-side fetched data
+  const contributions = githubData?.contributions || [];
+  const stats = {
+    totalContributions: githubData?.totalContributions || 0,
+    currentStreak: githubData?.currentStreak || 0,
+    maxStreak: githubData?.maxStreak || 0,
+    thisMonth: githubData?.thisMonth || 0,
+  };
+  const loading = contributions.length === 0;
 
   const calculateStats = (data) => {
     const total = data.reduce((sum, c) => sum + c.count, 0);
@@ -84,39 +65,9 @@ const GitContribution = () => {
     };
   };
 
+  // No need for data fetching effect as data is passed from server-side props
   useEffect(() => {
-    const fetchGitHubData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/github");
-        const data = await res.json();
-
-        if (
-          res.ok &&
-          data &&
-          Array.isArray(data.contributions) &&
-          data.contributions.length > 0
-        ) {
-          setContributions(data.contributions);
-          setStats({
-            totalContributions: data.totalContributions || 0,
-            currentStreak: data.currentStreak || 0,
-            maxStreak: data.maxStreak || 0,
-            thisMonth: data.thisMonth || 0,
-          });
-        } else {
-          throw new Error("Invalid or empty GitHub data");
-        }
-      } catch {
-        setContributions(fallbackContributions);
-        setStats(calculateStats(fallbackContributions));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGitHubData();
-
+    // Suppress console errors related to GitHub contribution data
     const originalConsoleError = console.error;
     console.error = (...args) => {
       if (
@@ -191,10 +142,34 @@ const GitContribution = () => {
     }
   }, [loading, contributions]);
 
+  if (loading) {
+    return (
+      <section className="py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
+        <div className="max-w-5xl mx-auto text-center">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            Loading GitHub contributions...
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (contributions.length === 0) {
+    return (
+      <section className="py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
+        <div className="max-w-5xl mx-auto text-center">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            No GitHub contributions available.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-20 px-4 section-gradient-bg">
+    <section className="py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
       <div className="max-w-5xl mx-auto">
-        <motion.div
+        <MotionDiv
           className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -208,7 +183,7 @@ const GitContribution = () => {
             My coding activity and contribution streak over the past year
           </p>
 
-          <motion.div
+          <MotionDiv
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             initial="hidden"
             animate="visible"
@@ -220,12 +195,12 @@ const GitContribution = () => {
               stats.maxStreak,
               stats.thisMonth,
             ].map((value, i) => (
-              <motion.div
-                key={i}
+              <MotionDiv
+                key={["total", "current", "max", "month"][i]}
                 className="bg-white/70 dark:bg-gray-800/70 backdrop-blur p-4 rounded-2xl"
                 variants={statVariants}
               >
-                <motion.div
+                <MotionDiv
                   className={`text-2xl font-bold ${
                     [
                       "text-green-600 dark:text-green-400",
@@ -237,7 +212,7 @@ const GitContribution = () => {
                   variants={statVariants}
                 >
                   <CountingNumber end={value} />
-                </motion.div>
+                </MotionDiv>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   {
                     [
@@ -248,12 +223,12 @@ const GitContribution = () => {
                     ][i]
                   }
                 </div>
-              </motion.div>
+              </MotionDiv>
             ))}
-          </motion.div>
-        </motion.div>
+          </MotionDiv>
+        </MotionDiv>
 
-        <motion.div
+        <MotionDiv
           className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 dark:border-gray-700/30 flex justify-center"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -285,7 +260,7 @@ const GitContribution = () => {
             />
             <ReactTooltip id="github-tooltip" className="custom-tooltip" />
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
     </section>
   );

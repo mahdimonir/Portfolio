@@ -102,7 +102,7 @@ const WorksManager = () => {
 
   const fetchTechStacks = async () => {
     try {
-      const response = await axios.get("/techstack");
+      const response = await axios.get("/techstacks");
       setTechStacks(response.data.data || []);
     } catch (error) {
       console.error("Error fetching tech stacks:", error);
@@ -211,7 +211,7 @@ const WorksManager = () => {
               break;
             case "techstack":
               await axios.delete(
-                `/techstack/${encodeURIComponent(id)}/${encodeURIComponent(
+                `/techstacks/${encodeURIComponent(id)}/${encodeURIComponent(
                   itemName
                 )}`
               );
@@ -341,7 +341,7 @@ const WorksManager = () => {
       if (editingItem) {
         // Update existing tech (PATCH, not PUT)
         const res = await axios.patch(
-          `/techstack/${encodeURIComponent(
+          `/techstacks/${encodeURIComponent(
             formTech.category
           )}/${encodeURIComponent(editingItem.name)}`,
           {
@@ -355,7 +355,7 @@ const WorksManager = () => {
         updatedCategory = res.data.data;
       } else {
         // Create new tech
-        const res = await axios.post("/techstack", formTech);
+        const res = await axios.post("/techstacks", formTech);
         updatedCategory = res.data.data;
       }
 

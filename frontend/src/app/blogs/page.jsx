@@ -1,9 +1,7 @@
-"use client";
-
-import axios from "@/lib/axios";
-import { motion } from "framer-motion";
+import serverAxios from "@/lib/serverAxios";
+import axios from "axios";
+import { MotionDiv, MotionArticle, containerVariants, itemVariants } from "@/components/ui/motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   FaArrowLeft,
   FaBlog,
@@ -12,88 +10,47 @@ import {
   FaTag,
 } from "react-icons/fa";
 
-// 🧩 Import your states
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+// Define the revalidation time (24 hours)
+export const revalidate = 86400;
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+// Using pre-defined animation variants from the motion component
 
-const itemVariants = {
-  hidden: { y: 50, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.6,
-    },
-  },
-};
-
-const Page = () => {
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const response = await axios.get("/blogs");
-        setBlogs(response.data.data || []);
-      } catch (err) {
-        console.error("Blog fetch error:", err);
-        setError(err?.response?.data?.message || "Failed to load blog posts.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlogs();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="py-20">
-        <LoadingState message="Loading blogs..." />
-      </div>
-    );
+async function getBlogs() {
+  try {
+    // Use absolute URL with base URL from environment variables
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+    const response = await serverAxios.get("/blogs");
+    return response.data.data.map((blog) => ({
+      ...blog,
+      id: blog._id,
+      image: blog.image || "/fallback-image.png",
+      author: blog.author || null,
+      tags: Array.isArray(blog.tags) ? blog.tags : [],
+      category: blog.category || "Uncategorized",
+    }));
+  } catch (error) {
+    console.error("Failed to fetch blogs:", error);
+    return [];
   }
+}
 
-  if (error) {
-    return (
-      <div className="py-20">
-        <ErrorState
-          title="Failed to load Blogs"
-          description="There was a problem connecting to our servers. Please check your connection and try again."
-          onRetry={() => window.location.reload()}
-          error={error}
-        />
-      </div>
-    );
-  }
+const Page = async () => {
+  const blogs = await getBlogs();
 
   if (blogs.length === 0) {
     return (
       <div className="py-20">
-        <EmptyState
-          icon={FaBlog}
-          title="No blog articles found"
-          description="Looks like there are no blog posts available at the moment. Check back later!"
-          action={
-            <Link
-              href="/"
-              className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
-            >
-              Go back home
-            </Link>
-          }
-        />
+        <div className="flex flex-col items-center justify-center text-center">
+          <FaBlog className="text-5xl text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">No blog articles found</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Looks like there are no blog posts available at the moment. Check back later!</p>
+          <Link
+            href="/"
+            className="mt-6 inline-block bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
+          >
+            Go back home
+          </Link>
+        </div>
       </div>
     );
   }
@@ -104,7 +61,7 @@ const Page = () => {
         <main className="pb-20 pt-8">
           <div className="max-w-6xl mx-auto px-4">
             {/* Header */}
-            <motion.div
+            <MotionDiv
               className="mb-12"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -125,17 +82,17 @@ const Page = () => {
                 Thoughts, tutorials, and insights about web development,
                 technology, and programming.
               </p>
-            </motion.div>
+            </MotionDiv>
 
             {/* Blogs Grid */}
-            <motion.div
+            <MotionDiv
               className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               {blogs.map((blog) => (
-                <motion.article
+                <MotionArticle
                   key={blog._id}
                   variants={itemVariants}
                   className="group relative"
@@ -207,18 +164,18 @@ const Page = () => {
                         className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
                       >
                         Read More
-                        <motion.div
+                        <MotionDiv
                           whileHover={{ x: 4 }}
                           transition={{ duration: 0.2 }}
                         >
                           →
-                        </motion.div>
+                        </MotionDiv>
                       </Link>
                     </div>
                   </div>
-                </motion.article>
+                </MotionArticle>
               ))}
-            </motion.div>
+            </MotionDiv>
           </div>
         </main>
       </div>
