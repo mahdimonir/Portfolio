@@ -1,12 +1,13 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes.js";
-// import profileRoutes from './profileRoutes.js';
-// import projectRoutes from './projectRoutes.js';
-// import articleRoutes from './articleRoutes.js';
-// import testimonialRoutes from './testimonialRoutes.js';
-// import experienceRoutes from './experienceRoutes.js';
-// import techRoutes from './techRoutes.js';
+import blogRoutes from "./blogRoutes.js";
+import experienceRoutes from "./experienceRoutes.js";
 import messageRoutes from "./messageRoutes.js";
+import profileRoutes from "./profileRoutes.js";
+import projectRoutes from "./projectRoutes.js";
+import serviceRoutes from "./serviceRoutes.js";
+import techStackRoutes from "./techStackRoutes.js";
+import testimonialRoutes from "./testimonialRoutes.js";
 
 const router = Router();
 
@@ -17,12 +18,13 @@ router.get("/health", (req, res) => {
 
 // API routes
 router.use("/auth", authRoutes);
-// router.use('/profile', profileRoutes);
-// router.use('/projects', projectRoutes);
-// router.use('/articles', articleRoutes);
-// router.use('/testimonials', testimonialRoutes);
-// router.use('/experiences', experienceRoutes);
-// router.use('/tech', techRoutes);
-router.use("/message", messageRoutes);
+router.use("/me", profileRoutes);
+router.use("/techstacks", techStackRoutes);
+router.use("/projects", projectRoutes);
+router.use("/blogs", blogRoutes);
+router.use("/testimonials", testimonialRoutes);
+router.use("/experiences", experienceRoutes);
+router.use("/services", serviceRoutes);
+router.use("/messages", messageRoutes);
 
 export default router;
