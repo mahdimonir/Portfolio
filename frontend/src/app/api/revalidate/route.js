@@ -1,24 +1,32 @@
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
-
-export async function GET() {
+export async function POST(request) {
   try {
-    // Revalidate main pages
-    revalidatePath("/");
-    revalidatePath("/projects");
-    revalidatePath("/blogs");
-    revalidatePath("/projects/[slug]");
-    revalidatePath("/blogs/[slug]");
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get("token");
+    const tag = searchParams.get("tag");
 
-    return NextResponse.json(
-      { revalidated: true, now: Date.now() },
-      { status: 200 }
-    );
+    if (token !== process.env.REVALIDATION_TOKEN) {
+      return NextResponse.json(
+        { message: "Invalid token" },
+        { status: 401 }
+      );
+    }
+
+    if (!tag) {
+      return NextResponse.json(
+        { message: "Missing tag param" },
+        { status: 400 }
+      );
+    }
+
+    revalidateTag(tag);
+
+    return NextResponse.json({ revalidated: true, now: Date.now() });
   } catch (err) {
     return NextResponse.json(
-      { revalidated: false, now: Date.now(), error: err.message },
+      { message: "Error revalidating" },
       { status: 500 }
     );
   }

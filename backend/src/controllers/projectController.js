@@ -8,6 +8,7 @@ import {
   deleteMultipleImages,
   uploadProjectImages,
 } from "../utils/cloudinary.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 // Build a lookup of individual technology subdocuments by their _id
@@ -233,6 +234,10 @@ export const createProject = asyncHandler(async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.created(decorated, "Project created successfully"));
+
+  // Revalidate cache
+  await revalidate("projects");
+  await revalidate("homepage");
 });
 
 // Update Project
@@ -292,6 +297,10 @@ export const updateProject = asyncHandler(async (req, res) => {
   const techMapUpd = await buildTechnologyMap();
   const decoratedUpd = mapProjectTech(project.toObject(), techMapUpd);
   res.json(new ApiResponse(200, decoratedUpd, "Project updated successfully"));
+
+  // Revalidate cache
+  await revalidate("projects");
+  await revalidate("homepage");
 });
 
 // Delete Project
@@ -310,4 +319,8 @@ export const deleteProject = asyncHandler(async (req, res) => {
   await updateTechUsesCounts();
   await updateServiceProjectCounts();
   res.json(new ApiResponse(200, null, "Project deleted successfully"));
+
+  // Revalidate cache
+  await revalidate("projects");
+  await revalidate("homepage");
 });

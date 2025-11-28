@@ -5,17 +5,16 @@ import Hero from "@/components/homepage/Hero";
 import Services from "@/components/homepage/Services";
 import TechStack from "@/components/homepage/TechStack";
 import Testimonials from "@/components/homepage/Testimonials";
-import axios from "axios";
+import { fetchAPI } from "@/lib/fetchApi";
 
 // Define the revalidation time (24 hours)
-export const revalidate = 86400;
+// Define the revalidation time (removed to allow granular control via fetch tags)
+// export const revalidate = 86400;
 
-async function fetchData(endpoint) {
+async function fetchData(endpoint, tags = []) {
   try {
-    // Use absolute URL for server-side rendering
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const res = await axios.get(`${baseUrl}${endpoint}`);
-    return res.data.data || [];
+    const res = await fetchAPI(endpoint, { next: { tags } });
+    return res.data || [];
   } catch (error) {
     console.error(`Error fetching ${endpoint}:`, error);
     return [];
@@ -29,12 +28,12 @@ export default async function Page() {
   // Fetch data for all sections
   const [user, techStacks, projects, services, experiences, testimonials, githubData] =
     await Promise.all([
-      fetchData("/me/public"),
-      fetchData("/techstacks"),
-      fetchData("/projects?featured=true"),
-      fetchData("/services"),
-      fetchData("/experiences"),
-      fetchData("/testimonials"),
+      fetchData("/me/public", ["homepage"]),
+      fetchData("/techstacks", ["homepage", "techstack"]),
+      fetchData("/projects?featured=true", ["homepage", "projects"]),
+      fetchData("/services", ["homepage", "services"]),
+      fetchData("/experiences", ["homepage", "experience"]),
+      fetchData("/testimonials", ["homepage", "testimonials"]),
       fetchGitHubData(),
     ]);
 

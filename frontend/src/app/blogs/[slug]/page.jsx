@@ -1,12 +1,12 @@
-import serverAxios from "@/lib/serverAxios";
 import { MotionDiv, MotionHeader } from "@/components/ui/motion";
+import serverAxios from "@/lib/serverAxios";
 import Link from "next/link";
 import {
-  FaArrowLeft,
-  FaCalendarAlt,
-  FaClock,
-  FaTag,
-  FaUser,
+    FaArrowLeft,
+    FaCalendarAlt,
+    FaClock,
+    FaTag,
+    FaUser,
 } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 
@@ -38,6 +38,37 @@ const getBlog = async (slug) => {
     return null;
   }
 };
+
+export async function generateMetadata({ params }) {
+  const { slug } = params;
+  const blog = await getBlog(slug);
+
+  if (!blog) {
+    return {
+      title: "Blog Not Found",
+      description: "The blog post you are looking for does not exist.",
+    };
+  }
+
+  return {
+    title: blog.title,
+    description: blog.excerpt,
+    openGraph: {
+      title: blog.title,
+      description: blog.excerpt,
+      images: blog.image?.url ? [{ url: blog.image.url }] : [],
+      type: "article",
+      publishedTime: blog.publishedAt || blog.createdAt,
+      authors: [blog.author?.name || "Author"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.excerpt,
+      images: blog.image?.url ? [blog.image.url] : [],
+    },
+  };
+}
 
 const BlogPage = async ({ params }) => {
   const { slug } = params;

@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchAPI } from "@/lib/fetchApi";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FaCalendarAlt, FaClock, FaTimes, FaUser } from "react-icons/fa";
@@ -19,17 +20,39 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (isOpen) {
-      loadAvailableTimes();
+    if (isOpen && selectedDate) {
+      loadAvailableTimes(selectedDate);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedDate]);
 
-  const loadAvailableTimes = () => {
-    const savedTimes = JSON.parse(
-      localStorage.getItem("scheduleSlots") || "[]"
-    );
-    const activeTimes = savedTimes.filter((slot) => slot.status === "active");
-    setAvailableTimes(activeTimes);
+  const loadAvailableTimes = async (date = selectedDate) => {
+    if (!date) return;
+
+    try {
+      // Fetch all configured slots
+      const slotsResponse = await fetchAPI("/slots");
+      const allSlots = slotsResponse.data || [];
+      
+      // Filter only active slots
+      const activeSlots = allSlots.filter(s => s.status === "active");
+
+      // Fetch booked slots for the selected date
+      const bookingsResponse = await fetchAPI(`/bookings/slots?date=${date}`);
+      const bookedTimes = bookingsResponse.data || [];
+
+      // Filter out booked slots
+      const available = activeSlots.filter(
+        (slot) => !bookedTimes.includes(slot.time)
+      );
+      
+      // Sort slots by time (simple string sort for now, ideally backend handles this)
+      available.sort((a, b) => a.time.localeCompare(b.time));
+      
+      setAvailableTimes(available);
+    } catch (error) {
+      console.error("Failed to load slots:", error);
+      setAvailableTimes([]);
+    }
   };
 
   const getAvailableDates = () => {
@@ -60,7 +83,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
-    loadAvailableTimes();
+    loadAvailableTimes(date);
     setStep(2);
   };
 
@@ -83,7 +106,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const validationErrors = validateForm();
@@ -94,19 +117,18 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
     }
 
     try {
-      const consultations = JSON.parse(
-        localStorage.getItem("consultations") || "[]"
-      );
-      const newConsultation = {
-        id: Date.now(),
-        ...formData,
-        date: selectedDate,
-        time: selectedTime,
-        timestamp: new Date().toISOString(),
-        status: "pending",
-      };
-      consultations.push(newConsultation);
-      localStorage.setItem("consultations", JSON.stringify(consultations));
+      const response = await fetchAPI("/bookings", {
+        method: "POST",
+        body: JSON.stringify({
+          ...formData,
+          date: selectedDate,
+          time: selectedTime,
+        }),
+      });
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
 
       toast.success(
         "Consultation scheduled successfully! We'll confirm your appointment soon."
@@ -120,7 +142,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
       setErrors({});
       onClose();
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(error.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -131,6 +153,18 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
       month: "long",
       day: "numeric",
     });
+
+  const formatTime = (time24) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(":");
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -247,7 +281,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                   >
-                    {slot.time}
+                    {formatTime(slot.time)}
                   </motion.button>
                 ))}
               </div>
@@ -275,7 +309,7 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
             <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
               <div className="text-sm text-blue-800 dark:text-blue-300">
                 <div className="font-medium">{formatDate(selectedDate)}</div>
-                <div>{selectedTime}</div>
+                <div>{formatTime(selectedTime)}</div>
               </div>
             </div>
 

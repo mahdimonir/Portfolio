@@ -3,6 +3,7 @@ import { TechStack } from "../models/TechStack.js";
 import { NotFoundError, ValidationError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 const allowedCategories = ["Frontend", "Backend", "Database", "DevOps & Tools"];
@@ -32,6 +33,9 @@ export const createTech = asyncHandler(async (req, res) => {
   });
 
   res.json(new ApiResponse(201, newStack, "Tech stack created"));
+
+  await revalidate("techstack");
+  await revalidate("homepage");
 });
 
 // UPDATE tech item by name
@@ -52,6 +56,9 @@ export const updateTech = asyncHandler(async (req, res) => {
 
   await stack.save();
   res.json(new ApiResponse(200, stack, "Technology updated"));
+
+  await revalidate("techstack");
+  await revalidate("homepage");
 });
 
 // DELETE tech item by name and category
@@ -71,6 +78,9 @@ export const deleteTech = asyncHandler(async (req, res) => {
   await stack.save();
 
   res.json(new ApiResponse(200, stack, "Technology deleted"));
+
+  await revalidate("techstack");
+  await revalidate("homepage");
 });
 
 // GET all tech stacks

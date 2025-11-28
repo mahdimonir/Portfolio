@@ -2,6 +2,7 @@ import Service from "../models/Service.js";
 import { NotFoundError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 /**
@@ -52,6 +53,9 @@ export const createService = asyncHandler(async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.created(service, "Service created successfully"));
+
+  await revalidate("services");
+  await revalidate("homepage");
 });
 
 /**
@@ -68,6 +72,9 @@ export const updateService = asyncHandler(async (req, res) => {
   Object.assign(service, updates);
   await service.save();
   res.json(new ApiResponse(200, service, "Service updated successfully"));
+
+  await revalidate("services");
+  await revalidate("homepage");
 });
 
 /**
@@ -78,4 +85,7 @@ export const deleteService = asyncHandler(async (req, res) => {
   throwIf(!service, new NotFoundError("Service not found"));
   await service.deleteOne();
   res.json(new ApiResponse(200, null, "Service deleted successfully"));
+
+  await revalidate("services");
+  await revalidate("homepage");
 });

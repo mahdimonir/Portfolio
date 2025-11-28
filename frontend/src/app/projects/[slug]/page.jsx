@@ -3,10 +3,10 @@ import { MotionA, MotionDiv } from "@/components/ui/motion";
 import serverAxios from "@/lib/serverAxios";
 import Link from "next/link";
 import {
-  FaArrowLeft,
-  FaExternalLinkAlt,
-  FaGithub,
-  FaProjectDiagram,
+    FaArrowLeft,
+    FaExternalLinkAlt,
+    FaGithub,
+    FaProjectDiagram,
 } from "react-icons/fa";
 
 // Define the revalidation time (24 hours)
@@ -56,6 +56,35 @@ async function getProject(slug) {
     console.error("Failed to fetch project:", error);
     return null;
   }
+}
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const project = await getProject(slug);
+
+  if (!project) {
+    return {
+      title: "Project Not Found",
+      description: "The project you are looking for does not exist.",
+    };
+  }
+
+  return {
+    title: project.title,
+    description: project.description,
+    openGraph: {
+      title: project.title,
+      description: project.description,
+      images: project.image ? [{ url: project.image }] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: project.title,
+      description: project.description,
+      images: project.image ? [project.image] : [],
+    },
+  };
 }
 
 const Page = async (props) => {

@@ -1,21 +1,28 @@
-import { NextResponse } from "next/server";
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 3600 }); // Cache for 1 hour
+import axios from "axios";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { revalidate } from "../utils/revalidate.js";
 
-export async function GET(request) {
-  const { GITHUB_USERNAME, GITHUB_TOKEN } = process.env;
-  if (!GITHUB_USERNAME || !GITHUB_TOKEN) {
-    return NextResponse.json(
-      { error: "Username or token missing" },
-      { status: 400 }
-    );
-  }
-
-  const cacheKey = `github_${GITHUB_USERNAME}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
+export const getGitHubData = asyncHandler(async (req, res) => {
   try {
+    const { GITHUB_USERNAME, GITHUB_TOKEN } = process.env;
+
+    if (!GITHUB_USERNAME || !GITHUB_TOKEN) {
+      return res.json(
+        new ApiResponse(
+          200,
+          {
+            contributions: [],
+            totalContributions: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            thisMonth: 0,
+          },
+          "GitHub credentials missing"
+        )
+      );
+    }
+
     const query = `
       query {
         user(login: "${GITHUB_USERNAME}") {
@@ -34,20 +41,24 @@ export async function GET(request) {
       }
     `;
 
-    const response = await fetch("https://api.github.com/graphql", {
-      method: "POST",
-      headers: {
-        Authorization: `bearer ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query }),
-    });
+    const response = await axios.post(
+      "https://api.github.com/graphql",
+      { query },
+      {
+        headers: {
+          Authorization: `bearer ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    if (!response.ok) throw new Error("Failed to fetch GitHub data");
+    const data = response.data;
+    
+    if (data.errors) {
+        throw new Error(data.errors[0].message);
+    }
 
-    const data = await response.json();
-    const calendar =
-      data.data.user.contributionsCollection.contributionCalendar;
+    const calendar = data.data.user.contributionsCollection.contributionCalendar;
 
     const contributions = {};
     calendar.weeks.forEach((week) => {
@@ -111,20 +122,34 @@ export async function GET(request) {
       })
     );
 
-    const responseData = {
+    const result = {
       contributions: contributionData,
       totalContributions,
       currentStreak,
       maxStreak,
       thisMonth,
     };
-    cache.set(cacheKey, responseData);
-    return NextResponse.json(responseData);
+
+    res.json(new ApiResponse(200, result, "GitHub data fetched successfully"));
   } catch (error) {
     console.error("GitHub API error:", error.message);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    res.json(
+      new ApiResponse(
+        200,
+        {
+          contributions: [],
+          totalContributions: 0,
+          currentStreak: 0,
+          maxStreak: 0,
+          thisMonth: 0,
+        },
+        "Failed to fetch GitHub data"
+      )
     );
   }
-}
+});
+
+export const revalidateGitHub = asyncHandler(async (req, res) => {
+    await revalidate("github");
+    res.json(new ApiResponse(200, null, "GitHub cache revalidated"));
+});

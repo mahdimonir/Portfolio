@@ -150,19 +150,27 @@ export const getImageUrl = (publicId, options = {}) => {
  */
 export const uploadResume = async (
   fileString,
-  folder = "portfolio/resumes"
+  folder = "portfolio/resumes",
+  originalName = null
 ) => {
-  return uploadImage(fileString, folder, "raw", {
+  const options = {
     allowed_formats: ["pdf", "doc", "docx"],
     resource_type: "raw",
-  });
+  };
+
+  if (originalName) {
+    options.public_id = originalName.split(".")[0];
+    options.use_filename = true;
+    options.unique_filename = true;
+    if (originalName.includes(".")) {
+        options.public_id = originalName;
+    }
+  }
+
+  return uploadImage(fileString, folder, "raw", options);
 };
 
-/**
- * Upload project images
- * @param {Array} files - Array of file objects
- * @returns {Array} Array of upload responses
- */
+
 export const uploadProjectImages = async (files) => {
   return uploadMultipleImages(files, "portfolio/projects", {
     transformation: [
@@ -173,11 +181,6 @@ export const uploadProjectImages = async (files) => {
   });
 };
 
-/**
- * Upload testimonial images
- * @param {Array} files - Array of file objects
- * @returns {Array} Array of upload responses
- */
 export const uploadTestimonialImages = async (files) => {
   return uploadMultipleImages(files, "portfolio/testimonials", {
     transformation: [
@@ -188,11 +191,6 @@ export const uploadTestimonialImages = async (files) => {
   });
 };
 
-/**
- * Upload experience images
- * @param {Array} files - Array of file objects
- * @returns {Array} Array of upload responses
- */
 export const uploadExperienceImages = async (files) => {
   return uploadMultipleImages(files, "portfolio/experiences", {
     transformation: [
@@ -203,11 +201,6 @@ export const uploadExperienceImages = async (files) => {
   });
 };
 
-/**
- * Upload service images
- * @param {Array} files - Array of file objects
- * @returns {Array} Array of upload responses
- */
 export const uploadServiceImages = async (files) => {
   return uploadMultipleImages(files, "portfolio/services", {
     transformation: [

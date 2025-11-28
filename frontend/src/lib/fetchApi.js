@@ -1,12 +1,22 @@
 export async function fetchAPI(endpoint, options = {}) {
   const defaultOptions = {
-    next: { revalidate: process.env.NODE_ENV === "production" ? 3600 : 0 },
+    next: { revalidate: process.env.NODE_ENV === "production" ? false : 0 },
   };
 
   try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api${endpoint}`,
-      { ...defaultOptions, ...options }
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`,
+      {
+        ...defaultOptions,
+        ...options,
+        headers,
+        next: { ...defaultOptions.next, ...options.next },
+      }
     );
 
     if (!response.ok) {
