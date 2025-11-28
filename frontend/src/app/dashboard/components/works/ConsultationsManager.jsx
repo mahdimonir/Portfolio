@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchAPI } from "@/lib/fetchApi";
 import { getStatusColor } from "@/lib/status";
 import { motion } from "framer-motion";
 import {
@@ -32,28 +33,46 @@ const ConsultationsManager = forwardRef(
     const [itemsPerPage, setItemsPerPage] = useState(5);
 
     useEffect(() => {
+      fetchConsultations();
+      // Load slots from localStorage for now as they are configuration
       try {
-        const savedConsultations = JSON.parse(
-          localStorage.getItem("consultations") || "[]"
-        );
         const savedSlots = JSON.parse(
           localStorage.getItem("scheduleSlots") || "[]"
-        );
-        setConsultations(
-          savedConsultations.sort(
-            (a, b) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          )
-        );
-        setScheduleSlots(
-          savedSlots.sort((a, b) =>
-            String(a.time).localeCompare(String(b.time))
-          )
         );
       } catch (e) {
         // no-op
       }
     }, []);
+
+    useEffect(() => {
+      fetchSlots();
+    }, []);
+
+    const fetchSlots = async () => {
+      try {
+        const response = await fetchAPI("/slots");
+        if (response.data) {
+          setScheduleSlots(response.data);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch slots");
+      }
+    };
+
+    const fetchConsultations = async () => {
+      try {
+        const response = await fetchAPI("/bookings", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (response.data) {
+          setConsultations(response.data);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch consultations");
+      }
+    };
 
     useImperativeHandle(ref, () => ({
       openCreateSlot: () => {
@@ -64,42 +83,85 @@ const ConsultationsManager = forwardRef(
       },
     }));
 
-    const updateConsultationStatus = (id, status) => {
-      const updated = consultations.map((c) =>
-        c.id === id ? { ...c, status } : c
-      );
-      setConsultations(updated);
-      localStorage.setItem("consultations", JSON.stringify(updated));
-      toast.success(`Consultation ${status} successfully!`);
-    };
+    const updateConsultationStatus = async (id, status) => {
+      try {
+        const response = await fetchAPI(`/bookings/${id}/status`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ status }),
+        });
 
-    const deleteConsultation = (id) => {
-      const updated = consultations.filter((c) => c.id !== id);
-      setConsultations(updated);
-      localStorage.setItem("consultations", JSON.stringify(updated));
-      toast.success("Consultation deleted successfully!");
-    };
+        if (response.error) throw new Error(response.error);
 
-    const handleSaveSlot = (e) => {
-      e.preventDefault();
-      let updatedSlots;
-      if (editingSlot) {
-        updatedSlots = scheduleSlots.map((slot) =>
-          slot.id === editingSlot.id
-            ? { ...formData, id: editingSlot.id }
-            : slot
+        setConsultations(
+          consultations.map((c) => (c._id === id ? { ...c, status } : c))
         );
-        toast.success("Schedule slot updated successfully!");
-      } else {
-        const newSlot = { ...formData, id: Date.now() };
-        updatedSlots = [...scheduleSlots, newSlot];
-        toast.success("Schedule slot added successfully!");
+        toast.success(`Consultation ${status} successfully!`);
+      } catch (error) {
+        toast.error(error.message || "Failed to update status");
       }
-      setScheduleSlots(updatedSlots);
-      localStorage.setItem("scheduleSlots", JSON.stringify(updatedSlots));
-      setIsFormOpen(false);
-      setEditingSlot(null);
-      setFormData({ time: "", status: "active" });
+    };
+
+    const deleteConsultation = async (id) => {
+      if (!window.confirm("Are you sure you want to delete this consultation?")) return;
+      
+      try {
+        const response = await fetchAPI(`/bookings/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (response.error) throw new Error(response.error);
+
+        setConsultations(consultations.filter((c) => c._id !== id));
+        toast.success("Consultation deleted successfully!");
+      } catch (error) {
+        toast.error(error.message || "Failed to delete consultation");
+      }
+    };
+
+    const handleSaveSlot = async (e) => {
+      e.preventDefault();
+      try {
+        if (editingSlot) {
+          const response = await fetchAPI(`/slots/${editingSlot._id}`, {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(formData),
+          });
+          if (response.error) throw new Error(response.error);
+          
+          setScheduleSlots(
+            scheduleSlots.map((slot) =>
+              slot._id === editingSlot._id ? response.data : slot
+            )
+          );
+          toast.success("Schedule slot updated successfully!");
+        } else {
+          const response = await fetchAPI("/slots", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(formData),
+          });
+          if (response.error) throw new Error(response.error);
+
+          setScheduleSlots([...scheduleSlots, response.data]);
+          toast.success("Schedule slot added successfully!");
+        }
+        setIsFormOpen(false);
+        setEditingSlot(null);
+        setFormData({ time: "", status: "active" });
+      } catch (error) {
+        toast.error(error.message || "Failed to save slot");
+      }
     };
 
     const handleEditSlot = (slot) => {
@@ -108,24 +170,44 @@ const ConsultationsManager = forwardRef(
       setIsFormOpen(true);
     };
 
-    const handleDeleteSlot = (id) => {
-      if (window.confirm("Are you sure you want to delete this time slot?")) {
-        const updated = scheduleSlots.filter((s) => s.id !== id);
-        setScheduleSlots(updated);
-        localStorage.setItem("scheduleSlots", JSON.stringify(updated));
+    const handleDeleteSlot = async (id) => {
+      if (!window.confirm("Are you sure you want to delete this time slot?")) return;
+      
+      try {
+        const response = await fetchAPI(`/slots/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (response.error) throw new Error(response.error);
+
+        setScheduleSlots(scheduleSlots.filter((s) => s._id !== id));
         toast.success("Schedule slot deleted successfully!");
+      } catch (error) {
+        toast.error(error.message || "Failed to delete slot");
       }
     };
 
-    const toggleSlotStatus = (id) => {
-      const updated = scheduleSlots.map((s) =>
-        s.id === id
-          ? { ...s, status: s.status === "active" ? "inactive" : "active" }
-          : s
-      );
-      setScheduleSlots(updated);
-      localStorage.setItem("scheduleSlots", JSON.stringify(updated));
-      toast.success("Schedule slot status updated!");
+    const toggleSlotStatus = async (id, currentStatus) => {
+      try {
+        const newStatus = currentStatus === "active" ? "inactive" : "active";
+        const response = await fetchAPI(`/slots/${id}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (response.error) throw new Error(response.error);
+
+        setScheduleSlots(
+          scheduleSlots.map((s) => (s._id === id ? { ...s, status: newStatus } : s))
+        );
+        toast.success("Schedule slot status updated!");
+      } catch (error) {
+        toast.error(error.message || "Failed to update status");
+      }
     };
 
     const filteredConsultations = useMemo(() => {
@@ -192,6 +274,18 @@ const ConsultationsManager = forwardRef(
         day: "numeric",
       });
 
+    const formatTime = (time24) => {
+      if (!time24) return "";
+      const [hours, minutes] = time24.split(":");
+      const date = new Date();
+      date.setHours(parseInt(hours), parseInt(minutes));
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    };
+
     return (
       <div className="space-y-6">
         <div className="border-b border-gray-200 dark:border-gray-700">
@@ -247,7 +341,7 @@ const ConsultationsManager = forwardRef(
                 return filteredConsultations.slice(start, end);
               })().map((consultation) => (
                 <motion.div
-                  key={consultation.id}
+                  key={consultation._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow"
@@ -284,7 +378,8 @@ const ConsultationsManager = forwardRef(
                             </span>
                             <span className="flex items-center gap-1">
                               <FaClock size={12} />
-                              {consultation.time}
+                              <FaClock size={12} />
+                              {formatTime(consultation.time)}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -312,7 +407,7 @@ const ConsultationsManager = forwardRef(
                           <motion.button
                             onClick={() =>
                               updateConsultationStatus(
-                                consultation.id,
+                                consultation._id,
                                 "confirmed"
                               )
                             }
@@ -326,7 +421,7 @@ const ConsultationsManager = forwardRef(
                           <motion.button
                             onClick={() =>
                               updateConsultationStatus(
-                                consultation.id,
+                                consultation._id,
                                 "cancelled"
                               )
                             }
@@ -344,7 +439,7 @@ const ConsultationsManager = forwardRef(
                         <motion.button
                           onClick={() =>
                             updateConsultationStatus(
-                              consultation.id,
+                              consultation._id,
                               "completed"
                             )
                           }
@@ -358,7 +453,7 @@ const ConsultationsManager = forwardRef(
                       )}
 
                       <motion.button
-                        onClick={() => deleteConsultation(consultation.id)}
+                        onClick={() => deleteConsultation(consultation._id)}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -404,7 +499,7 @@ const ConsultationsManager = forwardRef(
                 return filteredSlots.slice(start, end);
               })().map((slot) => (
                 <motion.div
-                  key={slot.id}
+                  key={slot._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow"
@@ -419,7 +514,7 @@ const ConsultationsManager = forwardRef(
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {slot.time}
+                          {formatTime(slot.time)}
                         </h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -434,7 +529,7 @@ const ConsultationsManager = forwardRef(
 
                     <div className="flex items-center gap-2">
                       <motion.button
-                        onClick={() => toggleSlotStatus(slot.id)}
+                        onClick={() => toggleSlotStatus(slot._id, slot.status)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-colors ${
                           slot.status === "active"
                             ? "bg-red-600 hover:bg-red-700 text-white"
@@ -462,7 +557,7 @@ const ConsultationsManager = forwardRef(
                         <span className="hidden sm:inline">Edit</span>
                       </motion.button>
                       <motion.button
-                        onClick={() => handleDeleteSlot(slot.id)}
+                        onClick={() => handleDeleteSlot(slot._id)}
                         className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}

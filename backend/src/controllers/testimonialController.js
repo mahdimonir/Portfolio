@@ -3,6 +3,7 @@ import { NotFoundError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteImage, uploadImage } from "../utils/cloudinary.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 // Get active testimonials only
@@ -77,6 +78,9 @@ export const createTestimonial = asyncHandler(async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.created(testimonial, "Testimonial created successfully"));
+
+  await revalidate("testimonials");
+  await revalidate("homepage");
 });
 
 // Update testimonial
@@ -119,6 +123,9 @@ export const updateTestimonial = asyncHandler(async (req, res) => {
   res.json(
     new ApiResponse(200, testimonial, "Testimonial updated successfully")
   );
+
+  await revalidate("testimonials");
+  await revalidate("homepage");
 });
 
 // Delete testimonial
@@ -134,4 +141,7 @@ export const deleteTestimonial = asyncHandler(async (req, res) => {
   await testimonial.deleteOne();
 
   res.json(new ApiResponse(200, null, "Testimonial deleted successfully"));
+
+  await revalidate("testimonials");
+  await revalidate("homepage");
 });

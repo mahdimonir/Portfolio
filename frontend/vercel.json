@@ -3,10 +3,6 @@
   "name": "portfolio-frontend",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api_url",
-    "NEXT_PUBLIC_GITHUB_TOKEN": "@github_token"
-  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -32,7 +28,8 @@
   ],
   "images": {
     "domains": ["res.cloudinary.com", "avatars.githubusercontent.com"],
-    "minimumCacheTTL": 3600
+    "minimumCacheTTL": 3600,
+    "sizes": [16, 32, 48, 64, 96, 128, 256, 384, 512]
   },
   "crons": [
     {

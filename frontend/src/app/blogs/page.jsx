@@ -1,6 +1,5 @@
-import serverAxios from "@/lib/serverAxios";
-import axios from "axios";
-import { MotionDiv, MotionArticle, containerVariants, itemVariants } from "@/components/ui/motion";
+import { MotionArticle, MotionDiv, containerVariants, itemVariants } from "@/components/ui/motion";
+import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
   FaArrowLeft,
@@ -11,16 +10,15 @@ import {
 } from "react-icons/fa";
 
 // Define the revalidation time (24 hours)
-export const revalidate = 86400;
+// Define the revalidation time (removed to allow granular control via fetch tags)
+// export const revalidate = 86400;
 
 // Using pre-defined animation variants from the motion component
 
 async function getBlogs() {
   try {
-    // Use absolute URL with base URL from environment variables
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-    const response = await serverAxios.get("/blogs");
-    return response.data.data.map((blog) => ({
+    const response = await fetchAPI("/blogs", { next: { tags: ["blogs"] } });
+    return response.data.map((blog) => ({
       ...blog,
       id: blog._id,
       image: blog.image || "/fallback-image.png",

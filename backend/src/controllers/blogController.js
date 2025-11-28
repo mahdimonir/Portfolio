@@ -5,6 +5,7 @@ import { NotFoundError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteImage, uploadImage } from "../utils/cloudinary.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 // Get active blogs
@@ -149,6 +150,10 @@ export const createBlog = asyncHandler(async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.created(createdBlog, "Blog created successfully"));
+
+  // Revalidate cache
+  await revalidate("blogs");
+  await revalidate("homepage");
 });
 
 export const updateBlog = asyncHandler(async (req, res) => {
@@ -206,6 +211,10 @@ export const updateBlog = asyncHandler(async (req, res) => {
   );
 
   res.json(new ApiResponse(200, updatedBlog, "Blog updated successfully"));
+
+  // Revalidate cache
+  await revalidate("blogs");
+  await revalidate("homepage");
 });
 
 export const deleteBlog = asyncHandler(async (req, res) => {
@@ -217,6 +226,10 @@ export const deleteBlog = asyncHandler(async (req, res) => {
   }
   await blog.deleteOne();
   res.json(new ApiResponse(200, null, "Blog deleted successfully"));
+
+  // Revalidate cache
+  await revalidate("blogs");
+  await revalidate("homepage");
 });
 
 export const getBlogCategories = asyncHandler(async (req, res) => {

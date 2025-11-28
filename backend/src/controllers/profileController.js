@@ -112,7 +112,11 @@ export const updateResume = asyncHandler(async (req, res) => {
   }
 
   // Upload new resume
-  const uploaded = await uploadResume(req.files.resume.tempFilePath);
+  const uploaded = await uploadResume(
+    req.files.resume.tempFilePath,
+    "portfolio/resumes",
+    req.files.resume.name
+  );
 
   user.resume = {
     public_id: uploaded.publicId,
@@ -185,7 +189,11 @@ export const updateProfile = asyncHandler(async (req, res) => {
     }
 
     // Upload new resume
-    const uploaded = await uploadResume(req.files.resume.tempFilePath);
+    const uploaded = await uploadResume(
+      req.files.resume.tempFilePath,
+      "portfolio/resumes",
+      req.files.resume.name
+    );
 
     user.resume = {
       public_id: uploaded.publicId,

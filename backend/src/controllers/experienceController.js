@@ -2,6 +2,7 @@ import Experience from "../models/Experience.js";
 import { NotFoundError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 /**
@@ -104,6 +105,9 @@ export const createExperience = asyncHandler(async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.created(experience, "Experience created successfully"));
+
+  await revalidate("experience");
+  await revalidate("homepage");
 });
 
 /**
@@ -157,6 +161,9 @@ export const updateExperience = asyncHandler(async (req, res) => {
   await experience.populate("skills", "name category");
 
   res.json(new ApiResponse(200, experience, "Experience updated successfully"));
+
+  await revalidate("experience");
+  await revalidate("homepage");
 });
 
 /**
@@ -169,4 +176,7 @@ export const deleteExperience = asyncHandler(async (req, res) => {
   await experience.deleteOne();
 
   res.json(new ApiResponse(200, null, "Experience deleted successfully"));
+
+  await revalidate("experience");
+  await revalidate("homepage");
 });

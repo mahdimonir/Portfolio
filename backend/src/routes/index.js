@@ -1,11 +1,14 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes.js";
 import blogRoutes from "./blogRoutes.js";
+import bookingRoutes from "./bookingRoutes.js";
 import experienceRoutes from "./experienceRoutes.js";
+import githubRoutes from "./githubRoutes.js";
 import messageRoutes from "./messageRoutes.js";
 import profileRoutes from "./profileRoutes.js";
 import projectRoutes from "./projectRoutes.js";
 import serviceRoutes from "./serviceRoutes.js";
+import slotRoutes from "./slotRoutes.js";
 import techStackRoutes from "./techStackRoutes.js";
 import testimonialRoutes from "./testimonialRoutes.js";
 
@@ -26,5 +29,8 @@ router.use("/testimonials", testimonialRoutes);
 router.use("/experiences", experienceRoutes);
 router.use("/services", serviceRoutes);
 router.use("/messages", messageRoutes);
+router.use("/bookings", bookingRoutes);
+router.use("/github", githubRoutes);
+router.use("/slots", slotRoutes);
 
 export default router;
