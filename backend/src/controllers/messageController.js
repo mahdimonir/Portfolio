@@ -7,7 +7,6 @@ import { throwIfInvalid } from "../utils/throwIf.js";
 export const sendMessage = asyncHandler(async (req, res, next) => {
   const { senderEmail, senderName, subject, message } = req.body;
 
-  // Validate required fields
   throwIfInvalid({
     SenderEmail: !senderEmail,
     SenderName: !senderName,
@@ -15,7 +14,6 @@ export const sendMessage = asyncHandler(async (req, res, next) => {
     Message: !message,
   });
 
-  // Create message in database
   const data = await Message.create({
     senderEmail,
     senderName,
@@ -23,25 +21,22 @@ export const sendMessage = asyncHandler(async (req, res, next) => {
     message,
   });
 
-  // Send success response
   res.status(201).json(new ApiResponse(201, data, "Message sent successfully"));
 });
 
 export const replyMessage = asyncHandler(async (req, res) => {
   const { messageId, replyText } = req.body;
 
-  // Validate input
-  if (!messageId || !replyText) {
-    throw new ValidationError("Message ID and reply text are required");
-  }
+  throwIfInvalid({
+    MessageId: !messageId,
+    ReplyText: !replyText,
+  });
 
-  // Find the original message
   const message = await Message.findById(messageId);
   if (!message) {
     throw new ValidationError("Message not found");
   }
 
-  // Store the reply
   const reply = {
     message: replyText,
     createdAt: new Date(),
@@ -49,7 +44,6 @@ export const replyMessage = asyncHandler(async (req, res) => {
   message.replies.push(reply);
   await message.save();
 
-  // Send email using the provided sendEmail function
   await sendEmail({
     email: message.senderEmail,
     subject: `Re: ${message.subject}`,
@@ -67,7 +61,6 @@ export const replyMessage = asyncHandler(async (req, res) => {
 export const getAllMessages = asyncHandler(async (req, res, next) => {
   const messages = await Message.find().sort({ updatedAt: -1 });
 
-  // Send success response
   res
     .status(200)
     .json(new ApiResponse(200, messages, "Messages fetched successfully"));
@@ -81,7 +74,6 @@ export const deleteMessage = asyncHandler(async (req, res, next) => {
 
   await message.deleteOne();
 
-  // Send success response
   res
     .status(200)
     .json(new ApiResponse(200, null, "Message deleted successfully"));

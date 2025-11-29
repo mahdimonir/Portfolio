@@ -4,6 +4,7 @@ import { NotFoundError, ValidationError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { deleteImage, uploadImage, uploadResume } from "../utils/cloudinary.js";
+import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
 export const getProfile = asyncHandler(async (req, res) => {
@@ -25,7 +26,6 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
 
   throwIf(!user, new NotFoundError("User not found"));
 
-  // Manually shape public response
   const publicProfile = {
     fullName: user.fullName,
     tagLines: user.tagLines,
@@ -63,6 +63,8 @@ export const updateProfileDetails = asyncHandler(async (req, res) => {
   await user.save();
 
   res.json(new ApiResponse(200, user, "Profile details updated"));
+  await revalidate("hero");
+  await revalidate("homepage");
 });
 
 export const updateAvatar = asyncHandler(async (req, res) => {
@@ -71,12 +73,9 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 
   if (!req.files?.avatar) throw new ValidationError("No avatar file uploaded");
 
-  // Delete old avatar from Cloudinary if exists
   if (user.avatar?.public_id) {
     await deleteImage(user.avatar.public_id);
   }
-
-  // Upload new avatar
   const uploaded = await uploadImage(
     req.files.avatar.tempFilePath,
     "portfolio/avatars",
@@ -98,6 +97,8 @@ export const updateAvatar = asyncHandler(async (req, res) => {
   await user.save();
 
   res.json(new ApiResponse(200, user.avatar, "Avatar updated"));
+  await revalidate("hero");
+  await revalidate("homepage");
 });
 
 export const updateResume = asyncHandler(async (req, res) => {
@@ -106,12 +107,9 @@ export const updateResume = asyncHandler(async (req, res) => {
 
   if (!req.files?.resume) throw new ValidationError("No resume file uploaded");
 
-  // Delete old resume from Cloudinary if exists
   if (user.resume?.public_id) {
     await deleteImage(user.resume.public_id, "raw");
   }
-
-  // Upload new resume
   const uploaded = await uploadResume(
     req.files.resume.tempFilePath,
     "portfolio/resumes",
@@ -126,6 +124,8 @@ export const updateResume = asyncHandler(async (req, res) => {
   await user.save();
 
   res.json(new ApiResponse(200, user.resume, "Resume updated"));
+  await revalidate("hero");
+  await revalidate("homepage");
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
@@ -135,7 +135,6 @@ export const updateProfile = asyncHandler(async (req, res) => {
   let { fullName, socialLinks, contact, about, tagLines, avatar, resume } =
     req.body;
 
-  // Parse JSON strings if needed (for form-data cases)
   try {
     if (typeof socialLinks === "string") {
       socialLinks = JSON.parse(socialLinks);
@@ -154,14 +153,11 @@ export const updateProfile = asyncHandler(async (req, res) => {
   if (about) user.about = about;
   if (tagLines) user.tagLines = tagLines;
 
-  // Handle avatar upload
   if (req.files && req.files.avatar) {
-    // Delete old avatar from Cloudinary if exists
     if (user.avatar?.public_id) {
       await deleteImage(user.avatar.public_id);
     }
 
-    // Upload new avatar
     const uploaded = await uploadImage(
       req.files.avatar.tempFilePath,
       "portfolio/avatars",
@@ -181,14 +177,11 @@ export const updateProfile = asyncHandler(async (req, res) => {
     };
   }
 
-  // Handle resume upload
   if (req.files && req.files.resume) {
-    // Delete old resume from Cloudinary if exists
     if (user.resume?.public_id) {
       await deleteImage(user.resume.public_id, "raw");
     }
 
-    // Upload new resume
     const uploaded = await uploadResume(
       req.files.resume.tempFilePath,
       "portfolio/resumes",
@@ -204,6 +197,8 @@ export const updateProfile = asyncHandler(async (req, res) => {
   await user.save();
 
   res.json(new ApiResponse(200, user, "Profile updated successfully"));
+  await revalidate("hero");
+  await revalidate("homepage");
 });
 
 export const changePassword = asyncHandler(async (req, res) => {

@@ -7,24 +7,34 @@ export async function POST(request) {
     const token = searchParams.get("token");
     const tag = searchParams.get("tag");
 
+    // 1. Verify the signature/token
     if (token !== process.env.REVALIDATION_TOKEN) {
       return NextResponse.json(
-        { message: "Invalid token" },
+        { message: "Invalid signature/token" },
         { status: 401 }
       );
     }
 
+    // 2. Validate tag presence
     if (!tag) {
       return NextResponse.json(
-        { message: "Missing tag param" },
+        { message: "Missing tag parameter" },
         { status: 400 }
       );
     }
 
+    // 3. Trigger revalidation
     revalidateTag(tag);
 
-    return NextResponse.json({ revalidated: true, now: Date.now() });
+    console.log(`[Revalidate] Tag: ${tag} | Time: ${new Date().toISOString()}`);
+
+    return NextResponse.json({ 
+      revalidated: true, 
+      tag,
+      now: Date.now() 
+    });
   } catch (err) {
+    console.error("[Revalidate] Error:", err);
     return NextResponse.json(
       { message: "Error revalidating" },
       { status: 500 }

@@ -2,16 +2,41 @@ import { MotionDiv, MotionHeader } from "@/components/ui/motion";
 import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
-    FaArrowLeft,
-    FaCalendarAlt,
-    FaClock,
-    FaTag,
-    FaUser,
+  FaArrowLeft,
+  FaCalendarAlt,
+  FaClock,
+  FaTag,
+  FaUser,
 } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
 
+// Generate static params for all blog slugs
+export async function generateStaticParams() {
+  try {
+    const response = await fetchAPI("/blogs", { next: { tags: ["blogs"] } });
+    const blogs = response.data || [];
+
+    return blogs.map((blog) => ({
+      slug: blog.slug,
+    }));
+  } catch (error) {
+    console.error("Error generating static params for blogs:", error);
+    return [];
+  }
+}
+
+async function getBlog(slug) {
+  try {
+    const response = await fetchAPI(`/blogs/slug/${slug}`, { next: { tags: ["blogs", `blog-${slug}`] } });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch blog:", error);
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   const blog = await getBlog(slug);
 
   if (!blog) {
@@ -41,8 +66,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-const BlogPage = async ({ params }) => {
-  const { slug } = params;
+const BlogPage = async (props) => {
+  const { slug } = await props.params;
   const blog = await getBlog(slug);
 
   if (!blog) {

@@ -33,7 +33,6 @@ const TestimonialForm = ({ isOpen, onClose, testimonial = null, onSave }) => {
       companyUrl: testimonial?.companyUrl || "",
     });
 
-    // Set image preview if testimonial has an image
     if (testimonial?.image?.url) {
       setImagePreview(testimonial.image.url);
     } else {
@@ -69,7 +68,6 @@ const TestimonialForm = ({ isOpen, onClose, testimonial = null, onSave }) => {
     setLoading(true);
     setError("");
 
-    // Validate required fields
     if (!formData.name.trim()) {
       setError("Client name is required");
       setLoading(false);
@@ -94,12 +92,10 @@ const TestimonialForm = ({ isOpen, onClose, testimonial = null, onSave }) => {
     try {
       const submitData = new FormData();
 
-      // Add form fields
       Object.keys(formData).forEach((key) => {
         submitData.append(key, formData[key]);
       });
 
-      // Add image if selected
       if (imageFile) {
         submitData.append("image", imageFile);
       }

@@ -1,47 +1,57 @@
-import serverAxios from "@/lib/serverAxios";
+import axios from "axios";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 3600; 
+
+const publicAxios = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+});
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://your-domain.com";
-
   // Static routes
-  const routes = ["", "/projects", "/blogs", "/services", "/about", "/contact"].map(
-    (route) => ({
-      url: `${baseUrl}${route}`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: route === "" ? 1 : 0.8,
-    })
-  );
+  const staticRoutes = ["", "/projects", "/blogs", "/contact"].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date().toISOString(),
+    changeFrequency: route === "" ? "daily" : "weekly",
+    priority: route === "" ? 1.0 : 0.8,
+  }));
 
-  // Dynamic Blog routes
-  let blogRoutes = [];
+  const urls = [...staticRoutes];
+
   try {
-    const blogsResponse = await serverAxios.get("/blogs");
-    const blogs = blogsResponse.data.data || [];
-    blogRoutes = blogs.map((blog) => ({
-      url: `${baseUrl}/blogs/${blog.slug}`,
-      lastModified: new Date(blog.updatedAt || blog.createdAt),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    }));
+    const [blogsRes, projectsRes] = await Promise.all([
+      publicAxios.get("/blogs").catch(() => ({ data: { data: [] } })),
+      publicAxios.get("/projects").catch(() => ({ data: { data: [] } })),
+    ]);
+
+    // Blogs
+    for (const blog of blogsRes.data.data || []) {
+      if (blog.slug && blog.published !== false) {
+        urls.push({
+          url: `${baseUrl}/blogs/${blog.slug}`,
+          lastModified: new Date(blog.updatedAt || blog.createdAt).toISOString(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        });
+      }
+    }
+
+    // Projects
+    for (const project of projectsRes.data.data || []) {
+      if (project.slug && project.published !== false) {
+        urls.push({
+          url: `${baseUrl}/projects/${project.slug}`,
+          lastModified: new Date(project.updatedAt || project.createdAt).toISOString(),
+          changeFrequency: "monthly",
+          priority: 0.7,
+        });
+      }
+    }
   } catch (error) {
-    console.error("Error fetching blogs for sitemap:", error);
+    console.warn("Sitemap: API unavailable during build → using static routes only", error.message);
   }
 
-  // Dynamic Project routes
-  let projectRoutes = [];
-  try {
-    const projectsResponse = await serverAxios.get("/projects");
-    const projects = projectsResponse.data.data || [];
-    projectRoutes = projects.map((project) => ({
-      url: `${baseUrl}/projects/${project.slug}`,
-      lastModified: new Date(project.updatedAt || project.createdAt),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    }));
-  } catch (error) {
-    console.error("Error fetching projects for sitemap:", error);
-  }
-
-  return [...routes, ...blogRoutes, ...projectRoutes];
+  return urls;
 }

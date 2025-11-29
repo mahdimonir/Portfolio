@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [code, setCode] = useState("");
   const [show2FA, setShow2FA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // New loading state
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +23,7 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true when request starts
+    setLoading(true);
     try {
       const result = await login(
         formData.email,
@@ -34,7 +34,7 @@ const LoginPage = () => {
       if (result?.requires2FA) {
         setShow2FA(true);
         toast.info("2FA code sent to email");
-        setLoading(false); // Reset loading after 2FA prompt
+        setLoading(false);
         return;
       }
 
@@ -43,7 +43,7 @@ const LoginPage = () => {
     } catch (err) {
       toast.error(err.message);
     } finally {
-      setLoading(false); // Reset loading after request completes
+      setLoading(false);
     }
   };
 

@@ -8,7 +8,6 @@ import { throwIf } from "../utils/throwIf.js";
 export const createBooking = asyncHandler(async (req, res) => {
   const { name, email, phone, date, time, message } = req.body;
 
-  // Check if slot is already booked
   const existingBooking = await Booking.findOne({
     date,
     time,

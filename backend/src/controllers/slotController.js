@@ -25,11 +25,7 @@ export const createSlot = asyncHandler(async (req, res) => {
 
 // Get all slots
 export const getSlots = asyncHandler(async (req, res) => {
-  // Sort logic could be improved, but string comparison works for simple AM/PM if format is consistent
-  // Ideally, store minutes from midnight or use 24h format for sorting
   const slots = await Slot.find().sort({ time: 1 });
-  
-  // Custom sort to handle AM/PM correctly if needed, but for now let's trust the input format or client sort
   res.json(new ApiResponse(200, slots, "Slots fetched successfully"));
 });
 

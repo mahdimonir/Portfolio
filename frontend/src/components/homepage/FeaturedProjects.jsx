@@ -19,13 +19,11 @@ const FeaturedProjects = ({ projects }) => {
   const touchEndX = useRef(0);
   const router = useRouter();
 
-  // Initialize client-side rendering
   useEffect(() => {
     setIsClient(true);
     setWindowWidth(window.innerWidth);
   }, []);
 
-  // Optimized resize handler with debouncing
   useEffect(() => {
     if (!isClient) return;
 
@@ -44,7 +42,6 @@ const FeaturedProjects = ({ projects }) => {
     };
   }, [isClient]);
 
-  // Optimized auto-play with better cleanup
   useEffect(() => {
     if (!isAutoPlaying || projects.length === 0) {
       clearInterval(intervalRef.current);
@@ -58,14 +55,12 @@ const FeaturedProjects = ({ projects }) => {
     return () => clearInterval(intervalRef.current);
   }, [isAutoPlaying, projects.length]);
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       clearTimeout(autoPlayTimeoutRef.current);
     };
   }, []);
 
-  // Memoized responsive settings
   const settings = useMemo(() => {
     if (windowWidth < 640) {
       return {
@@ -100,7 +95,6 @@ const FeaturedProjects = ({ projects }) => {
     }
   }, [windowWidth]);
 
-  // Fixed card positioning
   const getCardStyle = useCallback(
     (index) => {
       const totalCards = projects.length;
@@ -164,7 +158,6 @@ const FeaturedProjects = ({ projects }) => {
     [currentIndex, settings, projects.length, windowWidth]
   );
 
-  // Pause auto-play temporarily
   const pauseAutoPlayTemporarily = useCallback(() => {
     setIsAutoPlaying(false);
     clearTimeout(autoPlayTimeoutRef.current);
@@ -173,7 +166,6 @@ const FeaturedProjects = ({ projects }) => {
     }, 10000);
   }, []);
 
-  // Touch handling
   const handleTouchStart = (e) => {
     touchStartX.current = e.targetTouches[0].clientX;
     setIsDragging(false);
@@ -203,7 +195,6 @@ const FeaturedProjects = ({ projects }) => {
     setIsDragging(false);
   };
 
-  // Card click handler
   const handleCardClick = useCallback(
     (index, e) => {
       if (isDragging) return;
@@ -218,7 +209,6 @@ const FeaturedProjects = ({ projects }) => {
     [isDragging, currentIndex, pauseAutoPlayTemporarily]
   );
 
-  // View details handler
   const handleViewDetails = useCallback(
     (projectName, e) => {
       e.stopPropagation();
@@ -255,11 +245,10 @@ const FeaturedProjects = ({ projects }) => {
   }, []);
 
   if (!isClient || projects.length === 0) {
-    return null; // Skip rendering if not client-side or no projects
+    return null;
   }
 
   return (
-    // <section className="py-16 md:py-24 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 overflow-hidden relative min-h-screen flex items-center">
     <section className="py-16 md:py-24 px-4 section-gradient-bg overflow-hidden relative min-h-screen flex items-center">
       <div className="w-full max-w-7xl mx-auto relative z-10">
         {/* Header */}
@@ -380,9 +369,6 @@ const FeaturedProjects = ({ projects }) => {
                       <div
                         className={`absolute inset-0 bg-gradient-to-br ${dynamicGradient} opacity-5`}
                       />
-                      {/* <div
-                        className={`absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 opacity-5`}
-                      /> */}
 
                       {/* Project Image */}
                       <div className="relative h-40 md:h-52 overflow-hidden">

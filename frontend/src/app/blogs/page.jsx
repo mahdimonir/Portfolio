@@ -9,12 +9,6 @@ import {
   FaTag,
 } from "react-icons/fa";
 
-// Define the revalidation time (24 hours)
-// Define the revalidation time (removed to allow granular control via fetch tags)
-// export const revalidate = 86400;
-
-// Using pre-defined animation variants from the motion component
-
 async function getBlogs() {
   try {
     const response = await fetchAPI("/blogs", { next: { tags: ["blogs"] } });

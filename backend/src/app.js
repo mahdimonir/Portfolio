@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import fileUpload from "express-fileupload";
 import rateLimit from "express-rate-limit";
+import os from "os";
 import { v4 as uuidv4 } from "uuid";
 import { errorHandler } from "./middleware/errorHandler.js";
 import routes from "./routes/index.js";
@@ -37,10 +38,10 @@ app.use(cookieParser());
 app.use(
   fileUpload({
     useTempFiles: true,
-    tempFileDir: "/temp/",
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    tempFileDir: os.tmpdir(),
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
     abortOnLimit: true,
-    responseOnLimit: "File size limit has been reached (5MB)",
+    responseOnLimit: "File size limit has been reached (20MB)",
   })
 );
 
@@ -65,7 +66,6 @@ app.get("/", (req, res) => {
 // API routes
 app.use("/api/v1", routes);
 
-// 404 handler - must be placed after all routes
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
@@ -73,7 +73,7 @@ app.use("*", (req, res) => {
   });
 });
 
-// Error handler - must be the last middleware
 app.use(errorHandler);
 
 export { app };
+

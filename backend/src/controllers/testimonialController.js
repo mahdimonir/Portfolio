@@ -52,7 +52,6 @@ export const createTestimonial = asyncHandler(async (req, res) => {
     companyUrl: companyUrl || null,
   };
 
-  // Handle image upload
   if (req.files && req.files.image) {
     const uploaded = await uploadImage(
       req.files.image.tempFilePath,
@@ -90,14 +89,11 @@ export const updateTestimonial = asyncHandler(async (req, res) => {
 
   const updates = { ...req.body };
 
-  // Handle image update
   if (req.files && req.files.image) {
-    // Delete old image from Cloudinary if exists
     if (testimonial.image?.public_id) {
       await deleteImage(testimonial.image.public_id);
     }
 
-    // Upload new image
     const uploaded = await uploadImage(
       req.files.image.tempFilePath,
       "portfolio/testimonials",
@@ -116,7 +112,6 @@ export const updateTestimonial = asyncHandler(async (req, res) => {
     };
   }
 
-  // Update testimonial
   Object.assign(testimonial, updates);
   await testimonial.save();
 
@@ -133,7 +128,6 @@ export const deleteTestimonial = asyncHandler(async (req, res) => {
   const testimonial = await Testimonial.findById(req.params.id);
   throwIf(!testimonial, new NotFoundError("Testimonial not found"));
 
-  // Delete image from Cloudinary if exists
   if (testimonial.image?.public_id) {
     await deleteImage(testimonial.image.public_id);
   }

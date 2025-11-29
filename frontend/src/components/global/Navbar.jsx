@@ -239,7 +239,6 @@ const Navbar = () => {
 
 export default Navbar;
 
-// Helper to trigger login updates across tabs/pages
 export const triggerLoginStatusChange = () => {
   window.dispatchEvent(new CustomEvent("loginStatusChanged"));
 };
