@@ -32,12 +32,11 @@ export async function fetchAPI(endpoint, options = {}) {
 }
 
 export function getBaseUrl() {
-  if (typeof window !== "undefined") return ""; // browser should use relative url
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
-  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
+  if (typeof window !== "undefined") return "";
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
-// Cache the promises to avoid duplicate requests during static generation
 const promiseCache = new Map();
 
 export function cachedFetch(url, options = {}) {

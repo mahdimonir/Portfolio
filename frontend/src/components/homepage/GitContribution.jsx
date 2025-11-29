@@ -65,9 +65,7 @@ const GitContribution = ({ githubData }) => {
     };
   };
 
-  // No need for data fetching effect as data is passed from server-side props
   useEffect(() => {
-    // Suppress console errors related to GitHub contribution data
     const originalConsoleError = console.error;
     console.error = (...args) => {
       if (

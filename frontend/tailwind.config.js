@@ -1,15 +1,14 @@
+import typography from "@tailwindcss/typography";
+import tailwindcssAnimate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ["class"],
   content: [
     "./src/app/**/*.{js,jsx}",
     "./src/components/**/*.{js,jsx}",
     "./src/lib/**/*.{js,jsx}",
   ],
-  // Safelist dynamic gradient utilities (used via runtime/generated class strings)
-  // This prevents Tailwind's JIT/purge from removing classes such as
-  // "from-cyan-400 via-blue-500 to-purple-600" and "bg-gradient-to-br" when
-  // those are applied dynamically in JSX (e.g. getDynamicGradient()).
   safelist: [
     { pattern: /bg-gradient-to-(t|b|r|l|tr|tl|br|bl)/ },
     {
@@ -161,5 +160,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [tailwindcssAnimate, typography],
 };

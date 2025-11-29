@@ -4,20 +4,20 @@ import { fetchAPI } from "@/lib/fetchApi";
 import { getStatusColor } from "@/lib/status";
 import { motion } from "framer-motion";
 import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useState,
 } from "react";
 import {
-  FaCalendarAlt,
-  FaCheck,
-  FaClock,
-  FaEdit,
-  FaPlus,
-  FaTimes,
-  FaTrash,
+    FaCalendarAlt,
+    FaCheck,
+    FaClock,
+    FaEdit,
+    FaPlus,
+    FaTimes,
+    FaTrash,
 } from "react-icons/fa";
 import { toast } from "sonner";
 
@@ -50,7 +50,7 @@ const ConsultationsManager = forwardRef(
 
     const fetchSlots = async () => {
       try {
-        const response = await fetchAPI("/slots");
+        const response = await fetchAPI("/slots", { cache: "no-store" });
         if (response.data) {
           setScheduleSlots(response.data);
         }
@@ -62,6 +62,7 @@ const ConsultationsManager = forwardRef(
     const fetchConsultations = async () => {
       try {
         const response = await fetchAPI("/bookings", {
+          cache: "no-store",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },

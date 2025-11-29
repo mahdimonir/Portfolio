@@ -21,33 +21,29 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Check authentication status on mount
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      // Check if we have a token in localStorage (fallback)
       const token = localStorage.getItem("token");
       const userEmail = localStorage.getItem("userEmail");
 
       if (token && userEmail) {
-        // Verify token with backend using profile route
         const response = await axios.get("/me");
         if (response.data.success) {
           setUser(response.data.data);
           setIsAuthenticated(true);
         } else {
-          // Token is invalid, clear everything
-          // clearAuth();
+          clearAuth();
         }
       } else {
-        // clearAuth();
+        clearAuth();
       }
     } catch (error) {
       console.error("Auth check failed:", error);
-      // clearAuth();
+      clearAuth();
     } finally {
       setLoading(false);
     }
@@ -67,7 +63,6 @@ export const AuthProvider = ({ children }) => {
 
       const { token, user: userData } = response.data.data;
 
-      // Store token and user data
       localStorage.setItem("token", token);
       localStorage.setItem("userEmail", userData.email);
       localStorage.setItem("isLoggedIn", "true");
@@ -75,7 +70,6 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
 
-      // Trigger login status change for navbar
       window.dispatchEvent(new CustomEvent("loginStatusChanged"));
 
       return { success: true };
@@ -87,11 +81,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Call backend logout route
       await axios.post("/auth/logout");
     } catch (error) {
       console.error("Logout error:", error);
-      // Continue with client-side logout even if server call fails
     } finally {
       clearAuth();
       toast.success("Logged out successfully");
@@ -100,7 +92,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const clearAuth = () => {
-    // Clear all auth data
     localStorage.removeItem("token");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("isLoggedIn");
@@ -108,7 +99,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
 
-    // Trigger login status change for navbar
     window.dispatchEvent(new CustomEvent("loginStatusChanged"));
   };
 

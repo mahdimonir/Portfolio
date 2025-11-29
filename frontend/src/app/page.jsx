@@ -6,10 +6,7 @@ import Services from "@/components/homepage/Services";
 import TechStack from "@/components/homepage/TechStack";
 import Testimonials from "@/components/homepage/Testimonials";
 import { fetchAPI } from "@/lib/fetchApi";
-
-// Define the revalidation time (24 hours)
-// Define the revalidation time (removed to allow granular control via fetch tags)
-// export const revalidate = 86400;
+import { fetchGitHubData } from "@/lib/github";
 
 async function fetchData(endpoint, tags = []) {
   try {
@@ -21,23 +18,18 @@ async function fetchData(endpoint, tags = []) {
   }
 }
 
-// Import the GitHub data fetching function
-import { fetchGitHubData } from "@/lib/github";
-
 export default async function Page() {
-  // Fetch data for all sections
   const [user, techStacks, projects, services, experiences, testimonials, githubData] =
     await Promise.all([
-      fetchData("/me/public", ["homepage"]),
-      fetchData("/techstacks", ["homepage", "techstack"]),
-      fetchData("/projects?featured=true", ["homepage", "projects"]),
-      fetchData("/services", ["homepage", "services"]),
-      fetchData("/experiences", ["homepage", "experience"]),
-      fetchData("/testimonials", ["homepage", "testimonials"]),
+      fetchData("/me/public", ["hero", "homepage"]),
+      fetchData("/techstacks", ["techstack", "homepage"]),
+      fetchData("/projects?featured=true", ["projects", "featured-projects", "homepage"]),
+      fetchData("/services", ["services", "homepage"]),
+      fetchData("/experiences", ["experiences", "homepage"]),
+      fetchData("/testimonials", ["testimonials", "homepage"]),
       fetchGitHubData(),
     ]);
 
-  // Transform projects to match FeaturedProjects structure
   const transformedProjects = projects.map((project) => ({
     ...project,
     id: project._id || project.id,

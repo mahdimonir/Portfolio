@@ -29,23 +29,18 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
     if (!date) return;
 
     try {
-      // Fetch all configured slots
       const slotsResponse = await fetchAPI("/slots");
       const allSlots = slotsResponse.data || [];
       
-      // Filter only active slots
       const activeSlots = allSlots.filter(s => s.status === "active");
 
-      // Fetch booked slots for the selected date
       const bookingsResponse = await fetchAPI(`/bookings/slots?date=${date}`);
       const bookedTimes = bookingsResponse.data || [];
 
-      // Filter out booked slots
       const available = activeSlots.filter(
         (slot) => !bookedTimes.includes(slot.time)
       );
       
-      // Sort slots by time (simple string sort for now, ideally backend handles this)
       available.sort((a, b) => a.time.localeCompare(b.time));
       
       setAvailableTimes(available);
@@ -62,7 +57,6 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       if (date.getDay() !== 0 && date.getDay() !== 6) {
-        // Skip weekends
         dates.push(date.toISOString().split("T")[0]);
       }
     }
@@ -74,7 +68,6 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
       ...prev,
       [e.target.name]: e.target.value,
     }));
-    // Clear error on input change
     setErrors((prev) => ({
       ...prev,
       [e.target.name]: "",
@@ -92,13 +85,11 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
     setStep(3);
   };
 
-  // Simple validation for required fields
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else {
-      // Simple email regex check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email))
         newErrors.email = "Invalid email address";
@@ -134,7 +125,6 @@ const ConsultationScheduler = ({ isOpen, onClose }) => {
         "Consultation scheduled successfully! We'll confirm your appointment soon."
       );
 
-      // Reset form and steps
       setStep(1);
       setSelectedDate("");
       setSelectedTime("");

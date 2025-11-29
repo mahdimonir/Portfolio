@@ -4,7 +4,7 @@ export async function fetchGitHubData() {
   try {
     const response = await fetchAPI("/github", {
       next: {
-        revalidate: 3600, // Revalidate every hour
+        revalidate: 3600,
         tags: ["github"],
       },
     });
@@ -30,8 +30,8 @@ export async function fetchGitHubData() {
       currentStreak: 0,
       maxStreak: 0,
       thisMonth: 0,
-      loading: false, // Add loading state indicator if needed by UI
-      error: true, // Add error flag
+      loading: false,
+      error: true,
     };
   }
 }

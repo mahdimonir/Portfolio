@@ -6,10 +6,8 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add JWT token
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Check if running in browser
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (token) {
@@ -23,22 +21,16 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token expiration
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      // Token expired or invalid
       localStorage.removeItem("token");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("isLoggedIn");
-
-      // Trigger login status change
       window.dispatchEvent(new CustomEvent("loginStatusChanged"));
-
-      // Show toast only if not on login page
       if (window.location.pathname !== "/login") {
         toast.error("Session expired. Please login again.");
       }

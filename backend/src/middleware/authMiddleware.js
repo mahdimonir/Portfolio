@@ -8,17 +8,14 @@ import { throwIf } from "../utils/throwIf.js";
 
 // Utility to decode token and fetch user
 const decodeTokenAndGetUser = async (req) => {
-  // Extract token from cookies or Authorization header
   const token =
     req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
   throwIf(!token, new AuthError("Unauthorized request: No token provided"));
 
   try {
-    // Verify and decode token
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    // Fetch user from database, excluding password
     const user = await User.findById(decoded.userId).select("-password");
 
     return { token, decoded, user };
@@ -78,7 +75,6 @@ export const authorized = (roles) =>
   asyncHandler(async (req, res, next) => {
     const { decoded, user } = await decodeTokenAndGetUser(req);
 
-    // Use user.role if user exists, otherwise fall back to decoded.role
     const userRole = user?.role || decoded.role;
 
     throwIf(!userRole, new NotFoundError("User role not found"));
@@ -87,7 +83,6 @@ export const authorized = (roles) =>
       new ForbiddenError("You are not authorized")
     );
 
-    // Set req.user if available (for downstream middleware)
     if (user) req.user = user;
     next();
   });

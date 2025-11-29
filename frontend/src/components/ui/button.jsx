@@ -19,7 +19,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary-foreground underline-offset-4 hover:underline", // Adjusted for contrast
+        link: "text-primary-foreground underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -65,3 +65,4 @@ const Button = React.forwardRef(
 Button.displayName = "Button";
 
 export { Button, buttonVariants };
+

@@ -1,4 +1,3 @@
-// src/controllers/techStackController.js
 import { TechStack } from "../models/TechStack.js";
 import { NotFoundError, ValidationError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";

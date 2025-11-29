@@ -1,5 +1,3 @@
-// Blog Controller Updated to support coverImage with url and public_id
-
 import Blog from "../models/Blog.js";
 import { NotFoundError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -8,7 +6,6 @@ import { deleteImage, uploadImage } from "../utils/cloudinary.js";
 import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
 
-// Get active blogs
 export const getBlogs = asyncHandler(async (req, res) => {
   const {
     status = "published",
@@ -151,9 +148,9 @@ export const createBlog = asyncHandler(async (req, res) => {
     .status(201)
     .json(ApiResponse.created(createdBlog, "Blog created successfully"));
 
-  // Revalidate cache
   await revalidate("blogs");
   await revalidate("homepage");
+  if (createdBlog.slug) await revalidate(`blog-${createdBlog.slug}`);
 });
 
 export const updateBlog = asyncHandler(async (req, res) => {
@@ -183,17 +180,14 @@ export const updateBlog = asyncHandler(async (req, res) => {
     };
   }
 
-  // Parse coverImage if sent as JSON string from multipart form
   if (updates.coverImage && typeof updates.coverImage === "string") {
     try {
       updates.coverImage = JSON.parse(updates.coverImage);
     } catch (e) {
-      delete updates.coverImage; // ignore invalid value
+      delete updates.coverImage;
     }
   }
 
-  // If coverImage is explicitly set to null/undefined in the form, preserve existing
-  // Only update coverImage if it's actually provided in the form data
   if (updates.coverImage === null || updates.coverImage === undefined) {
     delete updates.coverImage;
   }
@@ -212,9 +206,9 @@ export const updateBlog = asyncHandler(async (req, res) => {
 
   res.json(new ApiResponse(200, updatedBlog, "Blog updated successfully"));
 
-  // Revalidate cache
   await revalidate("blogs");
   await revalidate("homepage");
+  if (updatedBlog.slug) await revalidate(`blog-${updatedBlog.slug}`);
 });
 
 export const deleteBlog = asyncHandler(async (req, res) => {
@@ -227,9 +221,9 @@ export const deleteBlog = asyncHandler(async (req, res) => {
   await blog.deleteOne();
   res.json(new ApiResponse(200, null, "Blog deleted successfully"));
 
-  // Revalidate cache
   await revalidate("blogs");
   await revalidate("homepage");
+  if (blog.slug) await revalidate(`blog-${blog.slug}`);
 });
 
 export const getBlogCategories = asyncHandler(async (req, res) => {

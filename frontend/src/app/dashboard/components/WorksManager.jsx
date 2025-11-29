@@ -33,7 +33,6 @@ const WorksManager = () => {
     onConfirm: () => {},
   });
 
-  // Real data from database
   const [projects, setProjects] = useState([]);
   const [services, setServices] = useState([]);
   const [experiences, setExperiences] = useState([]);
@@ -42,12 +41,10 @@ const WorksManager = () => {
   const [blogs, setBlogs] = useState([]);
   const [blogCategories, setBlogCategories] = useState([]);
 
-  // Global filters
   const [filterQuery, setFilterQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortOption, setSortOption] = useState("newest");
 
-  // Fetch data from backend
   useEffect(() => {
     fetchProjects();
     fetchServices();
@@ -76,13 +73,12 @@ const WorksManager = () => {
       setServices(response.data.data || []);
     } catch (error) {
       console.error("Error fetching services:", error);
-      // Don't show error toast for services if endpoint doesn't exist yet
     }
   };
 
   const fetchExperiences = async () => {
     try {
-      const response = await axios.get("/experiences/all"); // Get all experiences for admin
+      const response = await axios.get("/experiences/all");
       setExperiences(response.data.data || []);
     } catch (error) {
       console.error("Error fetching experiences:", error);
@@ -92,7 +88,7 @@ const WorksManager = () => {
 
   const fetchTestimonials = async () => {
     try {
-      const response = await axios.get("/testimonials/all"); // Get all testimonials for admin
+      const response = await axios.get("/testimonials/all");
       setTestimonials(response.data.data || []);
     } catch (error) {
       console.error("Error fetching testimonials:", error);
@@ -106,7 +102,6 @@ const WorksManager = () => {
       setTechStacks(response.data.data || []);
     } catch (error) {
       console.error("Error fetching tech stacks:", error);
-      // Optionally show a toast or error
     }
   };
 
@@ -135,13 +130,11 @@ const WorksManager = () => {
     },
   ];
 
-  // Function to clean up corrupted features for display
   const cleanFeaturesForDisplay = (features) => {
     if (!Array.isArray(features)) return [];
 
     return features
       .map((feature) => {
-        // If feature is a string that looks like JSON, try to parse it
         if (
           typeof feature === "string" &&
           feature.startsWith("[") &&
@@ -149,12 +142,10 @@ const WorksManager = () => {
         ) {
           try {
             const parsed = JSON.parse(feature);
-            // If parsed is an array, take the first item
             if (Array.isArray(parsed) && parsed.length > 0) {
               return parsed[0];
             }
           } catch (e) {
-            // If parsing fails, return the original string
             return feature;
           }
         }
@@ -254,7 +245,6 @@ const WorksManager = () => {
   };
 
   const handleBlogSave = (savedBlog) => {
-    // Ensure savedBlog has all required fields
     if (!savedBlog || !savedBlog._id) {
       console.error("Invalid blog data received:", savedBlog);
       toast.error("Failed to save blog: Invalid data received");
@@ -268,7 +258,6 @@ const WorksManager = () => {
       setBlogs([savedBlog, ...blogs]);
       toast.success("Blog post created successfully!");
     }
-    // Refresh categories in case a new one was added
     const categories = [
       "all",
       ...new Set(
@@ -282,7 +271,6 @@ const WorksManager = () => {
     setEditingItem(null);
     setFormData({});
 
-    // Refresh blogs to ensure we have the latest data
     fetchBlogs();
   };
 
@@ -339,13 +327,11 @@ const WorksManager = () => {
     try {
       let updatedCategory;
       if (editingItem) {
-        // Update existing tech (PATCH, not PUT)
         const res = await axios.patch(
           `/techstacks/${encodeURIComponent(
             formTech.category
           )}/${encodeURIComponent(editingItem.name)}`,
           {
-            // If renaming, send newName; otherwise, just send the fields
             newName: formTech.name,
             tagline: formTech.tagline,
             icon: formTech.icon,
@@ -354,23 +340,19 @@ const WorksManager = () => {
         );
         updatedCategory = res.data.data;
       } else {
-        // Create new tech
         const res = await axios.post("/techstacks", formTech);
         updatedCategory = res.data.data;
       }
 
-      // Update local state: replace the category with the updated one
       setTechStacks((prev) => {
         const idx = prev.findIndex(
           (c) => c.category === updatedCategory.category
         );
         if (idx !== -1) {
-          // Replace the category
           const arr = [...prev];
           arr[idx] = updatedCategory;
           return arr;
         } else {
-          // Add new category
           return [...prev, updatedCategory];
         }
       });
@@ -411,7 +393,6 @@ const WorksManager = () => {
       }
     };
 
-    // Helper to get comparable title/name for filters
     const getComparableText = (item) => {
       if (!item) return "";
       switch (activeTab) {
@@ -442,7 +423,6 @@ const WorksManager = () => {
 
     const data = getData();
 
-    // Apply global filters (consultations handled in child but we still show controls)
     let filteredData = data;
     if (filterQuery.trim()) {
       const q = filterQuery.trim().toLowerCase();
@@ -455,7 +435,6 @@ const WorksManager = () => {
         (item) => String(item?.status || "").toLowerCase() === filterStatus
       );
     }
-    // Sorting
     filteredData = [...filteredData].sort((a, b) => {
       const aDate = new Date(a?.updatedAt || a?.createdAt || 0).getTime();
       const bDate = new Date(b?.updatedAt || b?.createdAt || 0).getTime();
@@ -473,8 +452,6 @@ const WorksManager = () => {
           return bDate - aDate;
       }
     });
-
-    // For techstack and consultations, we'll still show the common header and filters below
 
     if (loading && activeTab !== "blogs") {
       return (

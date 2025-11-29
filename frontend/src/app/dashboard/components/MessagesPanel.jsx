@@ -22,7 +22,7 @@ const MessagesPanel = () => {
         const response = await axiosInstance.get("/messages/getall");
         const apiMessages = response.data.data.map((msg) => ({
           ...msg,
-          id: msg._id, // Ensure id is set from _id
+          id: msg._id,
           preview: generatePreview(msg.message),
         }));
         setMessages(apiMessages);
@@ -47,7 +47,6 @@ const MessagesPanel = () => {
       : trimmed;
   };
 
-  // Unified toggle function for starred and read
   const toggleMessageProperty = async (messageId, property) => {
     try {
       const message = messages.find((m) => m.id === messageId);
@@ -72,19 +71,15 @@ const MessagesPanel = () => {
           throw new Error("Invalid property");
       }
 
-      // Update state optimistically
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === messageId ? { ...msg, [property]: newValue } : msg
         )
       );
 
-      // Update selectedMessage if it's the current one
       if (selectedMessage?.id === messageId) {
         setSelectedMessage((prev) => ({ ...prev, [property]: newValue }));
       }
-
-      // Make API call
       await axiosInstance.patch(endpoint, { [property]: newValue });
 
       toast.success(successMessage);
@@ -93,7 +88,6 @@ const MessagesPanel = () => {
         `Failed to update ${property}: ` +
           (error.response?.data?.message || "Server error")
       );
-      // Revert state on error
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === messageId ? { ...msg, [property]: !newValue } : msg
@@ -131,7 +125,7 @@ const MessagesPanel = () => {
       });
       const newReply = {
         ...response.data.data,
-        createdAt: response.data.data.createdAt || new Date().toISOString(), // Use backend createdAt if available, else client-side
+        createdAt: response.data.data.createdAt || new Date().toISOString(),
       };
       setMessages((prev) =>
         prev.map((msg) =>
@@ -140,14 +134,12 @@ const MessagesPanel = () => {
             : msg
         )
       );
-      // Update selectedMessage to reflect the new reply
       setSelectedMessage((prev) => ({
         ...prev,
         replies: [...(prev.replies || []), newReply],
       }));
       toast.success("Reply sent successfully!");
       setReplyText("");
-      // Keep the detail view open to show the update
     } catch (error) {
       toast.error(
         "Failed to send reply: " +
@@ -169,7 +161,7 @@ const MessagesPanel = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Just now"; // Handle invalid or new dates
+    if (isNaN(date.getTime())) return "Just now";
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
 

@@ -1,24 +1,18 @@
 import TechList from "@/components/projects/TechList";
 import {
-    MotionA,
-    MotionDiv,
-    containerVariants,
-    itemVariants,
+  MotionA,
+  MotionDiv,
+  containerVariants,
+  itemVariants,
 } from "@/components/ui/motion";
 import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
-    FaArrowLeft,
-    FaExternalLinkAlt,
-    FaGithub,
-    FaProjectDiagram,
+  FaArrowLeft,
+  FaExternalLinkAlt,
+  FaGithub,
+  FaProjectDiagram,
 } from "react-icons/fa";
-
-// Define the revalidation time (24 hours)
-// Define the revalidation time (removed to allow granular control via fetch tags)
-// export const revalidate = 86400;
-
-// Using pre-defined animation variants from the motion component
 
 async function getProjects() {
   try {

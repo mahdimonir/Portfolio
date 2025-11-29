@@ -40,7 +40,7 @@ const Testimonials = ({ testimonials }) => {
     setIsAutoPlaying(false);
   };
 
-  if (testimonials.length === 0) return null; // Skip rendering if no testimonials
+  if (testimonials.length === 0) return null;
 
   return (
     <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">

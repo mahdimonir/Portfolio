@@ -351,7 +351,6 @@ const ProjectForm = ({
       Object.entries(formData).forEach(([key, value]) => {
         if (key === "tech") {
           data.append("tech", JSON.stringify(filteredTechs));
-          // data.append("tech", JSON.stringify(techStackIds));
         } else if (key === "features") {
           data.append("features", JSON.stringify(filteredFeatures));
         } else if (key === "client") {
@@ -1048,7 +1047,6 @@ const flattenTechs = (techStacks) => {
   (techStacks || []).forEach((stack) => {
     (stack.technologies || []).forEach(
       (tech) => flat.push({ ...tech, category: stack.category })
-      // flat.push({ ...tech, category: stack.category, techStackId: stack._id })
     );
   });
   return flat;

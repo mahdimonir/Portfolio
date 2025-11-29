@@ -1,4 +1,3 @@
-// components/global/getIconComponent.js
 import * as AiIcons from "react-icons/ai";
 import * as BsIcons from "react-icons/bs";
 import * as DiIcons from "react-icons/di";
@@ -20,5 +19,5 @@ const allIcons = {
 };
 
 export function getIconComponent(iconName) {
-  return allIcons[iconName] || FaIcons.FaQuestionCircle; // fallback icon
+  return allIcons[iconName] || FaIcons.FaQuestionCircle;
 }

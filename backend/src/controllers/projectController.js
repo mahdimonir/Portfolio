@@ -5,8 +5,8 @@ import { NotFoundError, ValidationError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
-    deleteMultipleImages,
-    uploadProjectImages,
+  deleteMultipleImages,
+  uploadProjectImages,
 } from "../utils/cloudinary.js";
 import { revalidate } from "../utils/revalidate.js";
 import { throwIf } from "../utils/throwIf.js";
@@ -235,9 +235,10 @@ export const createProject = asyncHandler(async (req, res) => {
     .status(201)
     .json(ApiResponse.created(decorated, "Project created successfully"));
 
-  // Revalidate cache
   await revalidate("projects");
   await revalidate("homepage");
+  if (project.featured) await revalidate("featured-projects");
+  if (project.slug) await revalidate(`project-${project.slug}`);
 });
 
 // Update Project
@@ -288,7 +289,7 @@ export const updateProject = asyncHandler(async (req, res) => {
     newImages = [...newImages, ...uploadedImages];
     updates.image = uploadedImages[0]?.url || project.image;
   }
-  // Filter out any images that might be missing public_id (legacy data fix)
+  
   updates.images = newImages.filter((img) => img.url && img.public_id);
   
   Object.assign(project, updates);
@@ -300,9 +301,10 @@ export const updateProject = asyncHandler(async (req, res) => {
   const decoratedUpd = mapProjectTech(project.toObject(), techMapUpd);
   res.json(new ApiResponse(200, decoratedUpd, "Project updated successfully"));
 
-  // Revalidate cache
   await revalidate("projects");
   await revalidate("homepage");
+  await revalidate("featured-projects");
+  if (project.slug) await revalidate(`project-${project.slug}`);
 });
 
 // Delete Project
@@ -322,7 +324,8 @@ export const deleteProject = asyncHandler(async (req, res) => {
   await updateServiceProjectCounts();
   res.json(new ApiResponse(200, null, "Project deleted successfully"));
 
-  // Revalidate cache
   await revalidate("projects");
   await revalidate("homepage");
+  await revalidate("featured-projects");
+  if (project.slug) await revalidate(`project-${project.slug}`);
 });

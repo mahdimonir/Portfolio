@@ -3,16 +3,12 @@ import { MotionA, MotionDiv } from "@/components/ui/motion";
 import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
-    FaArrowLeft,
-    FaExternalLinkAlt,
-    FaGithub,
-    FaProjectDiagram,
+  FaArrowLeft,
+  FaExternalLinkAlt,
+  FaGithub,
+  FaProjectDiagram,
 } from "react-icons/fa";
 
-// Define the revalidation time (24 hours)
-export const revalidate = 86400;
-
-// Generate static params for all project slugs
 export async function generateStaticParams() {
   try {
     const response = await fetchAPI("/projects", { next: { tags: ["projects"] } });
@@ -29,7 +25,7 @@ export async function generateStaticParams() {
 
 async function getProject(slug) {
   try {
-    const response = await fetchAPI(`/projects/${slug}`, { next: { tags: ["projects"] } });
+    const response = await fetchAPI(`/projects/${slug}`, { next: { tags: ["projects", `project-${slug}`] } });
     const projectData = response.data;
 
     if (!projectData) {

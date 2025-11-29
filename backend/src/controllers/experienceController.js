@@ -59,7 +59,6 @@ export const createExperience = asyncHandler(async (req, res) => {
     }
   }
 
-  // Set 'to' field to "Present" if current is true
   if (current) {
     periodData.to = "Present";
   }
@@ -78,7 +77,6 @@ export const createExperience = asyncHandler(async (req, res) => {
     companyUrl: companyUrl || null,
   };
 
-  // Handle skills as array of TechStack ObjectIds
   if (skills) {
     if (typeof skills === "string") {
       experienceData.skills = JSON.parse(skills);
@@ -87,7 +85,6 @@ export const createExperience = asyncHandler(async (req, res) => {
     }
   }
 
-  // Handle achievements as array
   if (achievements) {
     if (typeof achievements === "string") {
       experienceData.achievements = JSON.parse(achievements);
@@ -99,34 +96,30 @@ export const createExperience = asyncHandler(async (req, res) => {
   const experience = new Experience(experienceData);
   await experience.save();
 
-  // Populate skills before sending response
   await experience.populate("skills", "name category");
 
   res
     .status(201)
     .json(ApiResponse.created(experience, "Experience created successfully"));
 
-  await revalidate("experience");
+  await revalidate("experiences");
   await revalidate("homepage");
 });
 
-/**
- * Update experience
- */
+//  Update experience
+
 export const updateExperience = asyncHandler(async (req, res) => {
   const experience = await Experience.findById(req.params.id);
   throwIf(!experience, new NotFoundError("Experience not found"));
 
   const updates = { ...req.body };
 
-  // Handle period object
   if (updates.period) {
     if (typeof updates.period === "string") {
       updates.period = JSON.parse(updates.period);
     }
   }
 
-  // Set 'to' field to "Present" if current is true
   if (updates.current) {
     if (updates.period) {
       updates.period.to = "Present";
@@ -135,7 +128,6 @@ export const updateExperience = asyncHandler(async (req, res) => {
     }
   }
 
-  // Handle skills as array of TechStack ObjectIds
   if (updates.skills) {
     if (typeof updates.skills === "string") {
       updates.skills = JSON.parse(updates.skills);
@@ -144,7 +136,6 @@ export const updateExperience = asyncHandler(async (req, res) => {
     }
   }
 
-  // Handle achievements as array
   if (updates.achievements) {
     if (typeof updates.achievements === "string") {
       updates.achievements = JSON.parse(updates.achievements);
@@ -153,22 +144,18 @@ export const updateExperience = asyncHandler(async (req, res) => {
     }
   }
 
-  // Update experience
   Object.assign(experience, updates);
   await experience.save();
 
-  // Populate skills before sending response
   await experience.populate("skills", "name category");
 
   res.json(new ApiResponse(200, experience, "Experience updated successfully"));
 
-  await revalidate("experience");
+  await revalidate("experiences");
   await revalidate("homepage");
 });
 
-/**
- * Delete experience
- */
+//  Delete experience
 export const deleteExperience = asyncHandler(async (req, res) => {
   const experience = await Experience.findById(req.params.id);
   throwIf(!experience, new NotFoundError("Experience not found"));
@@ -177,6 +164,6 @@ export const deleteExperience = asyncHandler(async (req, res) => {
 
   res.json(new ApiResponse(200, null, "Experience deleted successfully"));
 
-  await revalidate("experience");
+  await revalidate("experiences");
   await revalidate("homepage");
 });
