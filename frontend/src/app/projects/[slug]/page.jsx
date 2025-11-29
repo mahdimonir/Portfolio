@@ -1,6 +1,6 @@
 import { getIconComponent } from "@/components/global/getIconComponent";
 import { MotionA, MotionDiv } from "@/components/ui/motion";
-import serverAxios from "@/lib/serverAxios";
+import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
     FaArrowLeft,
@@ -15,8 +15,8 @@ export const revalidate = 86400;
 // Generate static params for all project slugs
 export async function generateStaticParams() {
   try {
-    const response = await serverAxios.get("/projects");
-    const projects = response.data.data || [];
+    const response = await fetchAPI("/projects", { next: { tags: ["projects"] } });
+    const projects = response.data || [];
 
     return projects.map((project) => ({
       slug: project.slug,
@@ -29,8 +29,8 @@ export async function generateStaticParams() {
 
 async function getProject(slug) {
   try {
-    const response = await serverAxios.get(`/projects/${slug}`);
-    const projectData = response.data.data;
+    const response = await fetchAPI(`/projects/${slug}`, { next: { tags: ["projects"] } });
+    const projectData = response.data;
 
     if (!projectData) {
       return null;

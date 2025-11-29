@@ -1,5 +1,5 @@
 import { MotionDiv, MotionHeader } from "@/components/ui/motion";
-import serverAxios from "@/lib/serverAxios";
+import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
     FaArrowLeft,
@@ -9,35 +9,6 @@ import {
     FaUser,
 } from "react-icons/fa";
 import ReactMarkdown from "react-markdown";
-
-// Define the revalidation time (24 hours)
-export const revalidate = 86400;
-
-// Generate static params for all blog slugs
-export async function generateStaticParams() {
-  try {
-    const response = await serverAxios.get('/blogs');
-    const blogs = response.data.data || [];
-    
-    return blogs.map((blog) => ({
-      slug: blog.slug,
-    }));
-  } catch (error) {
-    console.error('Error generating static params for blogs:', error);
-    return [];
-  }
-}
-
-const getBlog = async (slug) => {
-  try {
-    const response = await serverAxios.get(`/blogs/slug/${slug}`);
-    return response.data.data;
-  } catch (error) {
-    // In a real app, you might want to log this error to a service
-    console.error("Failed to fetch blog:", error);
-    return null;
-  }
-};
 
 export async function generateMetadata({ params }) {
   const { slug } = params;
