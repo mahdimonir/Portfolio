@@ -13,6 +13,9 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
+// Trust proxy (required for Vercel/Heroku etc)
+app.set("trust proxy", 1);
+
 // Add request ID middleware for tracking requests
 app.use((req, res, next) => {
   req.id = uuidv4();
