@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { FaBriefcase, FaGraduationCap, FaBookOpen, FaCalendarAlt, FaMapMarkerAlt, FaExternalLinkAlt, FaHistory } from "react-icons/fa";
 import { getBackgroundGradient, getDynamicGradient } from "@/hooks/gradient";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { FaBookOpen, FaBriefcase, FaExternalLinkAlt, FaGraduationCap, FaHistory, FaMapMarkerAlt } from "react-icons/fa";
 
 const MyJourney = ({ experiences = [], education = [], courses = [] }) => {
   const [activeTab, setActiveTab] = useState("experience");
