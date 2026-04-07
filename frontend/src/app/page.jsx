@@ -1,12 +1,16 @@
-import Experience from "@/components/homepage/Experience";
 import FeaturedProjects from "@/components/homepage/FeaturedProjects";
 import GitContribution from "@/components/homepage/GitContribution";
 import Hero from "@/components/homepage/Hero";
+import MyJourney from "@/components/homepage/MyJourney";
 import Services from "@/components/homepage/Services";
 import TechStack from "@/components/homepage/TechStack";
 import Testimonials from "@/components/homepage/Testimonials";
 import { fetchAPI } from "@/lib/fetchApi";
 import { fetchGitHubData } from "@/lib/github";
+
+// Static Data for new sections
+import { courses } from "@/data/courses";
+import { education } from "@/data/education";
 
 async function fetchData(endpoint, tags = []) {
   try {
@@ -42,25 +46,37 @@ export default async function Page() {
       : [],
     status: project.status || "Completed",
     image: project.image || "/fallback-image.png",
-    github: project.github || `${user.socialLinks.github}/${project.slug}`,
+    github: project.github || `${user.socialLinks?.github || "https://github.com/mahdimonir"}/${project.slug}`,
     demo: project.demo || `https://${project.slug}.vercel.app`,
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-500">
+    <div className="min-h-screen mesh-gradient-light transition-all duration-500">
       <div className="relative">
-        <main className="pb-20">
+        <main className="pb-32">
           <Hero {...user} />
+          
           {techStacks.length > 0 && <TechStack techStacks={techStacks} />}
+          
           {transformedProjects.length > 0 && (
             <FeaturedProjects projects={transformedProjects} />
           )}
+          
           {services.length > 0 && <Services services={services} />}
-          {experiences.length > 0 && <Experience experiences={experiences} />}
+          
+          <MyJourney 
+            experiences={experiences} 
+            education={education} 
+            courses={courses} 
+          />
+          
           {testimonials.length > 0 && (
             <Testimonials testimonials={testimonials} />
           )}
-          <GitContribution githubData={githubData} />
+          
+          <div className="py-24">
+            <GitContribution githubData={githubData} />
+          </div>
         </main>
       </div>
     </div>

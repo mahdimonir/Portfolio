@@ -13,8 +13,6 @@ export const experiences = [
       "Reduced load times by 65%",
       "Led team of 8 developers",
     ],
-    color: "from-blue-500 to-cyan-500",
-    bgColor: "from-blue-500/10 to-cyan-500/10",
   },
   {
     id: 2,
@@ -30,8 +28,6 @@ export const experiences = [
       "Improved API performance by 40%",
       "Maintained 99.9% uptime",
     ],
-    color: "from-purple-500 to-pink-500",
-    bgColor: "from-purple-500/10 to-pink-500/10",
   },
   {
     id: 3,
@@ -47,8 +43,6 @@ export const experiences = [
       "Built component library",
       "Reduced bundle size by 50%",
     ],
-    color: "from-emerald-500 to-teal-500",
-    bgColor: "from-emerald-500/10 to-teal-500/10",
   },
   {
     id: 4,
@@ -64,8 +58,6 @@ export const experiences = [
       "Learned 5 new frameworks",
       "Achieved 95% client satisfaction",
     ],
-    color: "from-orange-500 to-red-500",
-    bgColor: "from-orange-500/10 to-red-500/10",
   },
 ];
 
