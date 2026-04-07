@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { FaBriefcase, FaGraduationCap, FaBookOpen, FaCalendarAlt, FaMapMarkerAlt, FaExternalLinkAlt } from "react-icons/fa";
+import { FaBriefcase, FaGraduationCap, FaBookOpen, FaCalendarAlt, FaMapMarkerAlt, FaExternalLinkAlt, FaHistory } from "react-icons/fa";
 import { getBackgroundGradient, getDynamicGradient } from "@/hooks/gradient";
 
 const MyJourney = ({ experiences = [], education = [], courses = [] }) => {
