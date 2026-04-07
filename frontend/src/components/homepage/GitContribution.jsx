@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { MotionDiv } from "@/components/ui/motion";
 import { useEffect, useRef, useState } from "react";
