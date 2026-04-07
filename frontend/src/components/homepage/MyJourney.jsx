@@ -180,7 +180,7 @@ const MyJourney = ({ experiences = [], education = [], courses = [] }) => {
   );
 
   return (
-    <section id="journey" className="py-32 px-4 relative overflow-hidden bg-white dark:bg-gray-950 font-inter">
+    <section id="journey" className="relative py-16 px-4 bg-white dark:bg-gray-950 font-inter overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[150px]" />
@@ -189,27 +189,32 @@ const MyJourney = ({ experiences = [], education = [], courses = [] }) => {
 
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
-          className="text-center mb-24"
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
           <motion.div
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-600 dark:text-purple-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-8 border border-purple-500/20 shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-6 shadow-sm backdrop-blur-sm border border-blue-500/20"
+            initial={{ scale: 0, rotate: -10 }}
+            whileInView={{ scale: 1, rotate: 0 }}
+            viewport={{ once: true }}
           >
+            <FaHistory className="text-xs" />
             Evolution & Growth
           </motion.div>
-          <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter text-gray-900 dark:text-white uppercase leading-none">
-            My <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Journey</span>
+
+          <h2 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            My Journey
           </h2>
-          <p className="text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed font-medium">
-            Chronological milestones of my technical expertise, academic pursuit, and continuous professional development.
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            A timeline of my professional experience, education, and continuous learning
           </p>
         </motion.div>
 
         {/* Custom Tabs */}
-        <div className="flex flex-wrap justify-center gap-6 mb-24 px-4">
+        <div className="flex flex-wrap justify-center gap-6 mb-12 px-4">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -217,44 +222,42 @@ const MyJourney = ({ experiences = [], education = [], courses = [] }) => {
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-4 px-10 py-5 rounded-[2rem] font-black text-xs transition-all duration-500 ${
+                className={`relative flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-sm transition-all duration-300 ${
                   isActive
-                    ? "text-white shadow-2xl shadow-purple-500/30"
-                    : "text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    ? "text-white shadow-xl shadow-blue-500/20"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
-                whileHover={{ scale: 1.05, y: -2 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-[2rem] -z-10"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl -z-10"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <Icon className={isActive ? "text-white" : "text-purple-500"} size={20} />
-                <span className="uppercase tracking-widest">{tab.label}</span>
+                <Icon className={isActive ? "text-white" : "text-blue-500"} size={18} />
+                <span className="tracking-wide">{tab.label}</span>
               </motion.button>
             );
           })}
         </div>
 
         {/* Tab Content */}
-        <div className="relative min-h-[500px]">
+        <div className="relative min-h-[400px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
               className="w-full"
             >
-              <div className="relative">
-                {activeTab === "experience" && renderTimelineItems(experiences)}
-                {activeTab === "education" && renderTimelineItems(education)}
-                {activeTab === "courses" && renderTimelineItems(courses)}
-              </div>
+              {activeTab === "experience" && renderTimelineItems(experiences)}
+              {activeTab === "education" && renderTimelineItems(education)}
+              {activeTab === "courses" && renderTimelineItems(courses)}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -5,11 +5,11 @@ export const services = [
   {
     id: 1,
     icon: FaDesktop,
-    title: "Frontend Development",
+    title: "Frontend Interfaces (React-based)",
     description:
-      "Beautiful, responsive user interfaces with seamless user experience and modern design.",
+      "High-performance, accessible, and responsive user interfaces built with modern React patterns.",
     features: [
-      "React & Vue.js",
+      "React & Next.js",
       "Responsive Design",
       "Performance Optimization",
       "UI/UX Implementation",
@@ -21,9 +21,9 @@ export const services = [
   {
     id: 2,
     icon: FaServer,
-    title: "Backend Development",
+    title: "Backend Systems & API Development",
     description:
-      "Robust server-side solutions with secure APIs and optimized performance.",
+      "Scalable server-side architecture, secure RESTful/GraphQL APIs, and optimized database management.",
     features: [
       "RESTful APIs",
       "Authentication",
@@ -37,9 +37,9 @@ export const services = [
   {
     id: 3,
     icon: FaCode,
-    title: "Full-Stack Development",
+    title: "Full Stack Application Development",
     description:
-      "End-to-end web application development with modern technologies and scalable architecture.",
+      "End-to-end engineering of complex web applications with integrated frontend and backend solutions.",
     features: [
       "React & Next.js",
       "Node.js & Express",

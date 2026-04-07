@@ -43,35 +43,29 @@ const Testimonials = ({ testimonials }) => {
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
-      <div className="max-w-6xl mx-auto">
+    <section className="relative py-12 md:py-16 px-4 bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900 overflow-hidden font-inter">
+      <div className="max-w-2xl mx-auto relative z-10">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-semibold mb-6"
-            initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-blue-500/20"
           >
-            <FaQuoteLeft />
-            Client Feedback
+            Kind Words
           </motion.div>
-
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            What Clients Say
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic">
+            Testimonials
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Testimonials from satisfied clients
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            Feedback from colleagues and partners I've had the pleasure to collaborate with.
           </p>
         </motion.div>
 
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative">
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 md:p-8 shadow-xl border border-white/20 dark:border-gray-700/20">
             <motion.div
               key={currentIndex}

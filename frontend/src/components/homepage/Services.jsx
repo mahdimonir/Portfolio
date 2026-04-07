@@ -42,7 +42,7 @@ const Services = ({ services }) => {
     <>
       <section
         ref={ref}
-        className="relative py-16 sm:py-24 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 overflow-hidden"
+        className="relative py-12 sm:py-16 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20 overflow-hidden"
       >
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.2),transparent_50%)]"></div>
@@ -66,9 +66,9 @@ const Services = ({ services }) => {
           />
         </div>
 
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-7xl mx-auto text-center">
           <motion.div
-            className="text-center mb-20"
+            className="text-center mb-12"
             initial={{ opacity: 0, y: 40 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8 }}
@@ -116,7 +116,7 @@ const Services = ({ services }) => {
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
             variants={containerVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
@@ -132,19 +132,19 @@ const Services = ({ services }) => {
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
                   <div className="relative h-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-50/50 dark:to-gray-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-50/5 dark:to-gray-900/50 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${getDynamicGradient(
                         index
-                      )} opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 transition-opacity duration-500`}
+                      )} opacity-0 group-hover:opacity-10 transition-all duration-500`}
                     ></div>
                     <motion.div
                       className={`absolute inset-0 rounded-3xl bg-gradient-to-r ${getDynamicGradient(
                         index
-                      )} opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 blur-sm`}
-                      initial={{ scale: 0.8 }}
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.3 }}
+                      )} opacity-0 group-hover:opacity-30 dark:group-hover:opacity-40 blur-xl scale-110`}
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 0.4 }}
+                      transition={{ duration: 0.4 }}
                     />
                     <motion.div
                       className={`relative w-16 h-16 bg-gradient-to-r ${getDynamicGradient(
@@ -306,7 +306,7 @@ const Services = ({ services }) => {
                   >
                     <motion.button
                       onClick={() => setIsContactFormOpen(true)}
-                      className="group relative w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden"
+                      className="group relative w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl overflow-hidden"
                       whileHover={{
                         scale: 1.05,
                         boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
@@ -326,7 +326,7 @@ const Services = ({ services }) => {
                     </motion.button>
                     <motion.button
                       onClick={() => setIsSchedulerOpen(true)}
-                      className="group relative w-full sm:w-auto px-8 py-4 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-white rounded-2xl font-semibold border-2 border-blue-600/50 hover:bg-blue-50/90 dark:hover:bg-gray-700/90 transition-all duration-300 shadow-lg hover:shadow-2xl backdrop-blur-sm"
+                      className="group relative w-full sm:w-auto px-8 py-4 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-white rounded-2xl font-semibold border-2 border-blue-600/30 hover:border-blue-600/60 transition-all duration-300 shadow-lg hover:shadow-2xl backdrop-blur-sm"
                       whileHover={{
                         scale: 1.05,
                         boxShadow: "0 25px 50px rgba(0,0,0,0.3)",

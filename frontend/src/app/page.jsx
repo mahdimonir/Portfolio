@@ -53,14 +53,14 @@ export default async function Page() {
   return (
     <div className="min-h-screen mesh-gradient-light transition-all duration-500">
       <div className="relative">
-        <main className="pb-32">
+        <main className="pb-16">
           <Hero {...user} />
-          
-          {techStacks.length > 0 && <TechStack techStacks={techStacks} />}
           
           {transformedProjects.length > 0 && (
             <FeaturedProjects projects={transformedProjects} />
           )}
+
+          {techStacks.length > 0 && <TechStack techStacks={techStacks} />}
           
           {services.length > 0 && <Services services={services} />}
           
@@ -74,7 +74,7 @@ export default async function Page() {
             <Testimonials testimonials={testimonials} />
           )}
           
-          <div className="py-24">
+          <div className="py-16">
             <GitContribution githubData={githubData} />
           </div>
         </main>

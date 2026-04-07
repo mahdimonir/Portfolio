@@ -4,7 +4,7 @@ export const courses = [
     role: "MERN Stack Web Development",
     company: "Interactive Cares",
     period: "July 2024 - December 2024",
-    link: "https://coursera.org/verify/meta-frontend",
+    link: "https://interactivecares.com/certificate/22dfcdc6-f5e2-4af3-82e6-bdbab0f04a2d",
     image: "/certs/meta-frontend.png"
   },
   {
@@ -12,7 +12,7 @@ export const courses = [
     role: "Next Level Web Development",
     company: "Programming Hero",
     period: "Nov 2025 - On Going",
-    link: "https://google.accredited.cloud/verify",
+    link: "https://web.programming-hero.com/home/level2",
     image: "/certs/google-cloud.png"
   },
   {
@@ -20,7 +20,7 @@ export const courses = [
     role: "System Design",
     company: "Chai aur Code",
     period: "Feb 2026 - On Going",
-    link: "https://aws.amazon.com/verification",
+    link: "https://chaicode.com/cohorts/system-design",
     image: "/certs/aws-developer.png"
   }
 ];

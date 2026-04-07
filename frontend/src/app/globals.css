@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -42,8 +42,17 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans overflow-x-hidden;
+    @apply bg-background text-foreground overflow-x-hidden;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Outfit", sans-serif;
+    @apply tracking-tight;
+  }
+
+  .font-heading {
+    font-family: "Outfit", sans-serif;
   }
 
   html {

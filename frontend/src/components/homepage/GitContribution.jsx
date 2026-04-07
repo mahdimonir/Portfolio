@@ -165,76 +165,67 @@ const GitContribution = ({ githubData }) => {
   }
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
-      <div className="max-w-5xl mx-auto">
-        <MotionDiv
-          className="text-center mb-12"
+    <section className="py-10 md:py-12 relative overflow-hidden bg-white dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Header */}
+        <motion.div
+          className="text-center mb-10"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-            GitHub Contributions
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
-            My coding activity and contribution streak over the past year
-          </p>
-
-          <MotionDiv
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-            initial="hidden"
-            animate="visible"
-            variants={statVariants}
+          <motion.div
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-blue-500/20"
           >
-            {[
-              stats.totalContributions,
-              stats.currentStreak,
-              stats.maxStreak,
-              stats.thisMonth,
-            ].map((value, i) => (
-              <MotionDiv
-                key={["total", "current", "max", "month"][i]}
-                className="bg-white/70 dark:bg-gray-800/70 backdrop-blur p-4 rounded-2xl"
-                variants={statVariants}
-              >
-                <MotionDiv
-                  className={`text-2xl font-bold ${
-                    [
-                      "text-green-600 dark:text-green-400",
-                      "text-blue-600 dark:text-blue-400",
-                      "text-purple-600 dark:text-purple-400",
-                      "text-pink-600 dark:text-pink-400",
-                    ][i]
-                  }`}
-                  variants={statVariants}
-                >
-                  <CountingNumber end={value} />
-                </MotionDiv>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {
-                    [
-                      "Total Contributions",
-                      "Current Streak",
-                      "Best Streak",
-                      "This Month",
-                    ][i]
-                  }
-                </div>
-              </MotionDiv>
-            ))}
-          </MotionDiv>
+            Open Source
+          </motion.div>
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            Git Contributions
+          </h2>
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            My recent activity and contributions to the developer community.
+          </p>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <MotionDiv
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          initial="hidden"
+          animate="visible"
+          variants={statVariants}
+        >
+          {[
+            { label: "Total Contributions", value: stats.totalContributions, color: "text-green-600 dark:text-green-400" },
+            { label: "Current Streak", value: stats.currentStreak, color: "text-blue-600 dark:text-blue-400" },
+            { label: "Best Streak", value: stats.maxStreak, color: "text-purple-600 dark:text-purple-400" },
+            { label: "This Month", value: stats.thisMonth, color: "text-pink-600 dark:text-pink-400" },
+          ].map((stat, i) => (
+            <MotionDiv
+              key={i}
+              className="bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm p-5 rounded-2xl border border-gray-100 dark:border-gray-700/50 transition-all duration-300 hover:shadow-lg"
+              variants={statVariants}
+            >
+              <div className={`text-2xl md:text-3xl font-bold ${stat.color} mb-1`}>
+                <CountingNumber end={stat.value} />
+              </div>
+              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                {stat.label}
+              </div>
+            </MotionDiv>
+          ))}
         </MotionDiv>
 
+        {/* Calendar Card */}
         <MotionDiv
-          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl p-8 shadow-lg border border-white/20 dark:border-gray-700/30 flex justify-center"
-          initial={{ opacity: 0, scale: 0.95 }}
+          className="bg-white dark:bg-gray-800/40 backdrop-blur-xl rounded-3xl p-6 md:p-10 shadow-2xl border border-gray-100 dark:border-gray-700/50 flex justify-center overflow-hidden"
+          initial={{ opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
           <div
-            className="w-full max-w-[800px] text-center"
+            className="w-full max-w-[850px] text-center"
             ref={calendarRef}
             id="calendar-wrapper"
           >
@@ -244,16 +235,12 @@ const GitContribution = ({ githubData }) => {
               colorScheme={theme === "dark" ? "dark" : "light"}
               colors={
                 theme === "dark"
-                  ? ["#0d1117", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
-                  : ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"]
+                  ? ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"]
+                  : ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
               }
-              fontSize={10}
-              blockSize={10}
-              blockMargin={3}
-              hideColorLegend={false}
-              hideMonthLabels={false}
-              hideTotalCount={false}
-              showWeekdayLabels={true}
+              fontSize={12}
+              blockSize={12}
+              blockMargin={4}
               style={{ width: "100%", margin: "0 auto" }}
             />
             <ReactTooltip id="github-tooltip" className="custom-tooltip" />

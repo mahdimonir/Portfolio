@@ -249,11 +249,11 @@ const FeaturedProjects = ({ projects }) => {
   }
 
   return (
-    <section className="py-16 md:py-24 px-4 section-gradient-bg overflow-hidden relative min-h-screen flex items-center">
+    <section className="py-12 md:py-16 px-4 section-gradient-bg overflow-hidden relative min-h-screen flex items-center">
       <div className="w-full max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <motion.div
-          className="text-center mb-12 md:mb-20"
+          className="text-center mb-10 md:mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -589,7 +589,7 @@ const FeaturedProjects = ({ projects }) => {
         </div>
 
         {/* Pagination Dots */}
-        <div className="flex justify-center mt-8 md:mt-12 gap-3">
+        <div className="flex justify-center mt-6 md:mt-8 gap-3">
           {projects.map((_, index) => (
             <motion.button
               key={index}

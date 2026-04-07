@@ -39,10 +39,10 @@ const TechStack = ({ techStacks }) => {
   };
 
   return (
-    <section className="py-16 md:py-20 px-4 section-gradient-bg">
+    <section className="py-12 md:py-16 px-4 section-gradient-bg">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -60,7 +60,7 @@ const TechStack = ({ techStacks }) => {
           </motion.div>
 
           <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Technologies I Use
+            Tech Stack & Tools
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Modern tools and technologies for building exceptional digital
@@ -68,7 +68,7 @@ const TechStack = ({ techStacks }) => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {techStacks.map((category, categoryIndex) => {
             const slideCount = getSlideCount(category.technologies.length);
             const currentSlide = slideIndexes[category.category] || 0;

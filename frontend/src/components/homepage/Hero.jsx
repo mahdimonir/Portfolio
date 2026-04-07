@@ -101,14 +101,14 @@ const Hero = ({
   };
 
   return (
-    <section className="min-h-screen section-gradient-bg flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
+    <section className="min-h-screen section-gradient-bg flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative overflow-hidden">
       <motion.div
         className="max-w-4xl w-full mx-auto text-center relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={itemVariants} className="mb-8">
+        <motion.div variants={itemVariants} className="mb-6">
           <div className="relative inline-block">
             <div className="relative w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 mx-auto">
               <div className="w-full h-full rounded-full overflow-hidden border-4 border-white/70 dark:border-gray-700/70 shadow-2xl relative z-20 bg-white dark:bg-gray-800">
@@ -137,7 +137,7 @@ const Hero = ({
 
         <motion.h1
           variants={itemVariants}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
         >
           {fullName}
         </motion.h1>
@@ -145,7 +145,7 @@ const Hero = ({
         {/* Dynamic Tagline Section with Typewriter Effect */}
         <motion.div
           variants={itemVariants}
-          className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-6 font-medium min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3.5rem] flex items-center justify-center"
+          className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-4 font-medium min-h-[2.5rem] sm:min-h-[3rem] md:min-h-[3.5rem] flex items-center justify-center"
         >
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent font-bold text-center relative">
             <span className="inline-block">
@@ -163,12 +163,14 @@ const Hero = ({
           </div>
         </motion.div>
 
-        <motion.p
+        <motion.div
           variants={itemVariants}
-          className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed px-4"
+          className="text-base sm:text-lg text-gray-500 dark:text-gray-400 mb-6 max-w-2xl mx-auto leading-relaxed px-4"
         >
-          {about}
-        </motion.p>
+          {about?.split("\n").map((line, i) => (
+            <p key={i} className={i > 0 ? "mt-4" : ""}>{line}</p>
+          ))}
+        </motion.div>
 
         <motion.div
           variants={itemVariants}

@@ -16,7 +16,7 @@ export const User = {
     "Modern Web Development Enthusiast",
   ],
   about:
-    "Passionate about creating beautiful, functional web applications using the MERN stack. I love turning complex problems into simple, elegant solutions.",
+    "Backend-focused full stack developer specializing in scalable APIs and real-world applications. I design efficient systems, manage databases, and turn complex business logic into clean, maintainable solutions.\nBuilt 4+ production-level projects including ERP systems, travel platforms, and API-based applications.",
   contact: {
     email: "mahdimoniruzzaman@gmail.com",
     phone: "+8801876689921",
