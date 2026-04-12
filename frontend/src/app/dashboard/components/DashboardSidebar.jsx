@@ -9,6 +9,7 @@ import {
   FaCog,
   FaEnvelope,
   FaFileAlt,
+  FaLayerGroup,
   FaSignOutAlt,
   FaTasks,
   FaUser,
@@ -22,6 +23,7 @@ const menuItems = [
   { id: "messages", label: "Messages", icon: FaEnvelope },
   { id: "profile", label: "Profile", icon: FaUser },
   { id: "resume", label: "Resume Maker", icon: FaFileAlt },
+  { id: "mockup", label: "Mockup Designer", icon: FaLayerGroup },
   { id: "settings", label: "Settings", icon: FaCog },
   { id: "logout", label: "Logout", icon: FaSignOutAlt },
 ];

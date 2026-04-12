@@ -12,6 +12,7 @@ import Overview from "./components/Overview";
 import ResumeMaker from "./components/ResumeMaker";
 import Settings from "./components/Settings";
 import UserProfileForm from "./components/UserProfileForm";
+import MockupDesigner from "./components/MockupDesigner";
 import WorksManager from "./components/WorksManager";
 
 const Page = () => {
@@ -68,6 +69,8 @@ const Page = () => {
         return <MessagesPanel openConfirmDialog={openConfirmDialog} />;
       case "resume":
         return <ResumeMaker openConfirmDialog={openConfirmDialog} />;
+      case "mockup":
+        return <MockupDesigner openConfirmDialog={openConfirmDialog} />;
       case "profile":
         return <UserProfileForm openConfirmDialog={openConfirmDialog} />;
       case "settings":
