@@ -1,4 +1,6 @@
+import JsonLd from "@/components/global/JsonLd";
 import { MotionDiv, MotionHeader } from "@/components/ui/motion";
+import { APP_NAME } from "@/lib/constants";
 import { fetchAPI } from "@/lib/fetchApi";
 import Link from "next/link";
 import {
@@ -38,6 +40,7 @@ async function getBlog(slug) {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const blog = await getBlog(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mahdi.dev" || "https://moniruzzaman-mahdi.vercel.app";
 
   if (!blog) {
     return {
@@ -49,19 +52,23 @@ export async function generateMetadata({ params }) {
   return {
     title: blog.title,
     description: blog.excerpt,
+    alternates: {
+      canonical: `/blogs/${slug}`,
+    },
     openGraph: {
-      title: blog.title,
+      title: `${blog.title} | ${APP_NAME}`,
       description: blog.excerpt,
-      images: blog.image?.url ? [{ url: blog.image.url }] : [],
+      url: `${baseUrl}/blogs/${slug}`,
+      images: blog.coverImage?.url ? [{ url: blog.coverImage.url }] : [],
       type: "article",
       publishedTime: blog.publishedAt || blog.createdAt,
-      authors: [blog.author?.name || "Author"],
+      authors: [blog.author?.name || APP_NAME],
     },
     twitter: {
       card: "summary_large_image",
       title: blog.title,
       description: blog.excerpt,
-      images: blog.image?.url ? [blog.image.url] : [],
+      images: blog.coverImage?.url ? [blog.coverImage.url] : [],
     },
   };
 }
@@ -89,8 +96,60 @@ const BlogPage = async (props) => {
     );
   }
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info"}/blogs`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: blog.title,
+      },
+    ],
+  };
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    description: blog.excerpt,
+    image: blog.coverImage?.url,
+    datePublished: blog.publishedAt || blog.createdAt,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt,
+    author: {
+      "@type": "Person",
+      name: blog.author?.name || "Moniruzzaman Mahdi",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Moniruzzaman Mahdi",
+      logo: {
+        "@type": "ImageObject",
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info"}/og-image.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info"}/blogs/${slug}`,
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 transition-colors duration-500">
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={articleSchema} />
       <div className="relative">
         <main className="pb-20 pt-8">
           <article className="max-w-4xl mx-auto px-4">

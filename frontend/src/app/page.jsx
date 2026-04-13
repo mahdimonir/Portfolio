@@ -9,8 +9,18 @@ import { fetchAPI } from "@/lib/fetchApi";
 import { fetchGitHubData } from "@/lib/github";
 
 // Static Data for new sections
+import JsonLd from "@/components/global/JsonLd";
 import { courses } from "@/data/courses";
 import { education } from "@/data/education";
+import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from "@/lib/constants";
+
+export const metadata = {
+  title: `${APP_NAME} • ${APP_SLOGAN}`,
+  description: APP_DESCRIPTION,
+  alternates: {
+    canonical: "/",
+  },
+};
 
 async function fetchData(endpoint, tags = []) {
   try {
@@ -50,8 +60,24 @@ export default async function Page() {
     demo: project.demo || `https://${project.slug}.vercel.app`,
   }));
 
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: user.fullName || "Moniruzzaman Mahdi",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://mahdi.dev" || "https://moniruzzaman-mahdi.vercel.app",
+    image: user.avatar,
+    jobTitle: "Full Stack Developer",
+    sameAs: [
+      user.socialLinks?.github,
+      user.socialLinks?.linkedin,
+      user.socialLinks?.twitter,
+    ].filter(Boolean),
+    description: user.about,
+  };
+
   return (
     <div className="min-h-screen mesh-gradient-light transition-all duration-500">
+      <JsonLd data={personSchema} />
       <div className="relative">
         <main className="pb-16">
           <Hero {...user} />

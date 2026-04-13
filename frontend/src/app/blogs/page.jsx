@@ -1,5 +1,6 @@
 import { MotionArticle, MotionDiv, containerVariants, itemVariants } from "@/components/ui/motion";
 import { fetchAPI } from "@/lib/fetchApi";
+import Image from "next/image";
 import Link from "next/link";
 import {
   FaArrowLeft,
@@ -8,6 +9,15 @@ import {
   FaClock,
   FaTag,
 } from "react-icons/fa";
+import { APP_NAME } from "@/lib/constants";
+
+export const metadata = {
+  title: "Blog",
+  description: `Tech insights, tutorials, and articles on web development, system design, and programming by ${APP_NAME}.`,
+  alternates: {
+    canonical: "/blogs",
+  },
+};
 
 async function getBlogs() {
   try {
@@ -91,11 +101,12 @@ const Page = async () => {
                 >
                   <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/20 dark:border-gray-700/30 h-full">
                     {/* Blog Image */}
-                    <div className="relative overflow-hidden h-48">
-                      <img
+                    <div className="relative overflow-hidden h-48 w-full">
+                      <Image
                         src={blog.coverImage?.url || "/fallback-image.png"}
                         alt={blog.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 

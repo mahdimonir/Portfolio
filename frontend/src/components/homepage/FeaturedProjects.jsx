@@ -3,6 +3,7 @@
 import { getIconComponent } from "@/components/global/getIconComponent";
 import { getDynamicGradient } from "@/hooks/gradient";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -371,12 +372,12 @@ const FeaturedProjects = ({ projects }) => {
                       />
 
                       {/* Project Image */}
-                      <div className="relative h-40 md:h-52 overflow-hidden">
-                        <img
+                      <div className="relative overflow-hidden h-40 md:h-52 bg-[#060d1a]">
+                        <Image
                           src={project.image}
                           alt={project.title}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                          loading="lazy"
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent" />
 

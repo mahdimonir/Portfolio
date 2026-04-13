@@ -1,16 +1,22 @@
-export const APP_NAME = "MAHDI Portfolio";
-export const APP_SLOGAN = "A showcase of my work and skills";
+export const APP_NAME = "Moniruzzaman Mahdi";
+export const APP_SLOGAN = "Full Stack Developer";
+
 export const APP_DESCRIPTION =
-  "Explore my projects, skills, and experiences in web development.";
+  "Moniruzzaman Mahdi is a Full Stack Developer skilled in building scalable web applications using React, Next.js, Node.js, Express, MongoDB, and PostgreSQL.";
+
 export const APP_KEYWORDS = [
-  "portfolio",
-  "web development",
-  "projects",
-  "skills",
-  "experience",
-  "frontend",
-  "backend",
-  "full stack",
-  "developer",
-  "programming",
+  "Moniruzzaman Mahdi",
+  "Full Stack Developer",
+  "JavaScript Developer",
+  "Backend Developer",
+  "React",
+  "Next.js",
+  "Node.js",
+  "Express.js",
+  "MongoDB",
+  "PostgreSQL",
+  "Prisma",
+  "REST API",
+  "System Design",
+  "Web Developer Portfolio",
 ];

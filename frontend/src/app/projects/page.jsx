@@ -13,6 +13,15 @@ import {
   FaGithub,
   FaProjectDiagram,
 } from "react-icons/fa";
+import { APP_NAME } from "@/lib/constants";
+
+export const metadata = {
+  title: "Projects",
+  description: `Explore the portfolio of ${APP_NAME}, featuring a diverse range of web development projects, full-stack applications, and technical experiments.`,
+  alternates: {
+    canonical: "/projects",
+  },
+};
 
 async function getProjects() {
   try {
@@ -106,7 +115,7 @@ const Page = async () => {
                   className="group relative"
                 >
                   <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/20 dark:border-gray-700/30">
-                    <div className="relative overflow-hidden h-64">
+                    <div className="relative overflow-hidden h-64 bg-[#060d1a]">
                       <img
                         src={project.image}
                         alt={project.title}
