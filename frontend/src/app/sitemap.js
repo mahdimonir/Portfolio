@@ -7,7 +7,7 @@ const publicAxios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mahdi.dev" || "https://moniruzzaman-mahdi.vercel.app";
+const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://moniruzzaman-mahdi.vercel.app").replace(/\/$/, "");
 
 export default async function sitemap() {
   // Static routes
