@@ -1,13 +1,57 @@
 import { getIconComponent } from "@/components/global/getIconComponent";
+import JsonLd from "@/components/global/JsonLd";
 import { MotionA, MotionDiv } from "@/components/ui/motion";
+import { APP_NAME } from "@/lib/constants";
 import { fetchAPI } from "@/lib/fetchApi";
+import Image from "next/image";
 import Link from "next/link";
 import {
   FaArrowLeft,
   FaExternalLinkAlt,
-  FaGithub,
-  FaProjectDiagram,
+  FaGithub
 } from "react-icons/fa";
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mahdi.dev" || "https://moniruzzaman-mahdi.vercel.app";
+
+  try {
+    const response = await fetchAPI(`/projects/${slug}`);
+    const project = response.data;
+
+    if (!project) return { title: "Project Not Found" };
+
+    return {
+      title: project.title,
+      description: project.description,
+      alternates: {
+        canonical: `/projects/${slug}`,
+      },
+      openGraph: {
+        title: `${project.title} | ${APP_NAME}`,
+        description: project.description,
+        url: `${baseUrl}/projects/${slug}`,
+        images: [
+          {
+            url: project.image || "/fallback-image.png",
+            width: 1200,
+            height: 630,
+            alt: project.title,
+          },
+        ],
+        type: "article",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: project.title,
+        description: project.description,
+        images: [project.image || "/fallback-image.png"],
+      },
+    };
+  } catch (error) {
+    return { title: "Project Details" };
+  }
+}
 
 export async function generateStaticParams() {
   try {
@@ -54,35 +98,6 @@ async function getProject(slug) {
   }
 }
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const project = await getProject(slug);
-
-  if (!project) {
-    return {
-      title: "Project Not Found",
-      description: "The project you are looking for does not exist.",
-    };
-  }
-
-  return {
-    title: project.title,
-    description: project.description,
-    openGraph: {
-      title: project.title,
-      description: project.description,
-      images: project.image ? [{ url: project.image }] : [],
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: project.title,
-      description: project.description,
-      images: project.image ? [project.image] : [],
-    },
-  };
-}
-
 const Page = async (props) => {
   const { slug } = await props.params;
   const project = await getProject(slug);
@@ -110,8 +125,50 @@ const Page = async (props) => {
     );
   }
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projects",
+        item: `${process.env.NEXT_PUBLIC_APP_URL || "https://mahdimonir.info"}/projects`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: project.title,
+      },
+    ],
+  };
+
+  const projectSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: project.title,
+    description: project.description,
+    applicationCategory: "WebApplication",
+    operatingSystem: "Web",
+    author: {
+      "@type": "Person",
+      name: "Moniruzzaman Mahdi",
+    },
+    image: project.image,
+    url: project.demo,
+    softwareVersion: "1.0",
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 transition-all duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 transition-colors duration-500">
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={projectSchema} />
       <div className="relative">
         <main className="pb-20 pt-8">
           <div className="max-w-4xl mx-auto px-4">
@@ -182,15 +239,17 @@ const Page = async (props) => {
             </MotionDiv>
 
             <MotionDiv
-              className="mb-12"
-              initial={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full h-64 md:h-96 rounded-3xl shadow-2xl overflow-hidden bg-[#060d1a]"
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6 }}
             >
-              <img
+              <Image
                 src={project.image}
                 alt={project.title}
-                className="w-full h-64 md:h-96 object-cover rounded-3xl shadow-2xl"
+                fill
+                className="object-cover"
+                priority
               />
             </MotionDiv>
 
@@ -381,12 +440,13 @@ const Page = async (props) => {
               {project.images.map((image, index) => (
                 <div
                   key={index}
-                  className="relative group overflow-hidden rounded-2xl"
+                  className="relative h-48 w-full group overflow-hidden rounded-2xl"
                 >
-                  <img
+                  <Image
                     src={image}
                     alt={`${project.title} screenshot ${index + 1}`}
-                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110 bg-[#060d1a]"
                   />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
